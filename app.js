@@ -140,6 +140,7 @@
       button.hidden = id === 'recent' && count === 0;
     });
     syncIndicator();
+    scrollActiveTabIntoView();
   }
 
   /* ---------- 分类下划线指示条 ---------- */
@@ -170,8 +171,26 @@
     }
   }
 
-  const categoryListObserver = new ResizeObserver(() => syncIndicator());
+  const categoryListObserver = new ResizeObserver(() => {
+    syncIndicator();
+    // 旋转屏幕等宽度变化后,选中的分类可能被挤出可视区。
+    scrollActiveTabIntoView();
+  });
   categoryListObserver.observe(categoryList);
+
+  // 选中分类落在横向滚动条可视区外时(深链接、旋转屏幕),把它滚回视野内。
+  function scrollActiveTabIntoView() {
+    const active = categoryList.querySelector('.category-button[aria-pressed="true"]:not([hidden])');
+    if (!active) return;
+    const listRect = categoryList.getBoundingClientRect();
+    const btnRect = active.getBoundingClientRect();
+    if (btnRect.width === 0) return;
+    // 1px 容差:子像素舍入造成的临界差不算出界。
+    if (btnRect.left >= listRect.left - 1 && btnRect.right <= listRect.right + 1) return;
+    const delta = btnRect.left + btnRect.width / 2 - (listRect.left + listRect.width / 2);
+    const maxScroll = categoryList.scrollWidth - categoryList.clientWidth;
+    categoryList.scrollLeft = Math.min(Math.max(categoryList.scrollLeft + delta, 0), maxScroll);
+  }
 
   /* ---------- 筛选与渲染 ---------- */
 
