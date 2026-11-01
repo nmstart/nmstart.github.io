@@ -9,11 +9,13 @@ window.NAV_SITES = [
   { name: '灯塔JSON', url: 'https://json.share888.top/', category: 'dev', description: '在线 JSON 格式化、校验与纠错。', tags: ['JSON', '格式化', '校验'], icon: './assets/icons/json.share888.top.png' },
   { name: 'Cloudflare', url: 'https://dash.cloudflare.com/', category: 'dev', description: 'CDN、DNS 等服务的管理控制台。', tags: ['CDN', 'DNS', '控制台'], icon: './assets/icons/dash.cloudflare.com.png' },
   { name: '腾讯云', url: 'https://www.tencentcloud.com/zh', category: 'dev', description: '腾讯云产品文档与服务控制台。', tags: ['云服务', '腾讯', '控制台'], icon: './assets/icons/www.tencentcloud.com.png' },
+  { name: '划水鸭', url: 'https://hsya.top/github.html', category: 'dev', description: 'GitHub 文件镜像加速下载工具。', tags: ['GitHub', '加速', '镜像'], icon: './assets/icons/hsya.top.png' },
 
   // 开发文档
   { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'docs', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
   { name: 'LangChain', url: 'https://docs.langchain.com/', category: 'docs', description: '构建 LLM 应用与 AI Agent 的框架文档。', tags: ['LLM', 'Agent', '框架'], icon: './assets/icons/docs.langchain.com.png' },
   { name: 'Spring', url: 'https://spring.io/', category: 'docs', description: 'Java 企业级开发框架官方站与指南。', tags: ['Java', '框架', '后端'], icon: './assets/icons/spring.io.svg' },
+  { name: 'JavaGuide', url: 'https://javaguide.cn/', category: 'docs', description: 'Java 面试与后端知识体系指南。', tags: ['Java', '面试', '后端'], icon: './assets/icons/javaguide.cn.png' },
 
   // 人工智能
   { name: 'DeepSeek', url: 'https://chat.deepseek.com/', category: 'ai', description: '支持推理、问答与编程的 AI 助手。', tags: ['推理', '编程', '国产'], icon: './assets/icons/deepseek.svg' },
@@ -41,4 +43,7 @@ window.NAV_SITES = [
   { name: 'InfoQ', url: 'https://www.infoq.cn/', category: 'discover', description: '关注软件开发与技术实践的中文社区。', tags: ['技术', '架构', '资讯'], icon: './assets/icons/infoq.svg' },
   { name: 'LINUX DO', url: 'https://linux.do/', category: 'discover', description: '新的理想型技术社区，开发与 AI 资源交流。', tags: ['社区', 'Linux', '技术'], icon: './assets/icons/linux.do.png' },
   { name: 'IDC Flare', url: 'https://idcflare.com/', category: 'discover', description: '域名、主机与 IDC 信息的交流社区。', tags: ['社区', '域名', 'VPS'], icon: './assets/icons/idcflare.com.png' },
+  { name: 'HelloGitHub', url: 'https://hellogithub.com/', category: 'discover', description: '分享 GitHub 上有趣的开源项目月刊。', tags: ['开源', 'GitHub', '月刊'], icon: './assets/icons/hellogithub.com.svg' },
+  { name: '开源中国', url: 'https://www.oschina.net/', category: 'discover', description: '开源技术社区与资讯门户。', tags: ['开源', '社区', '资讯'], icon: './assets/icons/www.oschina.net.png' },
+  { name: '不死鸟', url: 'https://iui.su/', category: 'discover', description: '软件下载与优质资源分享博客。', tags: ['资源', '软件', '分享'], icon: './assets/icons/iui.su.png' },
 ];
