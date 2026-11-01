@@ -202,8 +202,40 @@ svg {
   -webkit-backdrop-filter: blur(16px);
 }
 
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 吸顶后出现的迷你品牌入口（JS 标记 is-stuck） */
+.controls-brand {
+  flex: 0 0 auto;
+  display: none;
+}
+
+.controls.is-stuck .controls-brand {
+  display: block;
+  animation: brand-in 200ms ease;
+}
+
+.controls-brand img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+@keyframes brand-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
 .search-box {
   position: relative;
+  flex: 1;
   display: flex;
   align-items: center;
 }

@@ -32,6 +32,7 @@
   const themeToggle = document.querySelector('#theme-toggle');
   const themeColor = document.querySelector('meta[name="theme-color"]');
   const backToTop = document.querySelector('#back-to-top');
+  const controls = document.querySelector('.controls');
   const toast = document.querySelector('#toast');
   const searchShortcut = document.querySelector('#search-shortcut');
 
@@ -495,11 +496,13 @@
 
   /* ---------- 回到顶部 ---------- */
 
-  function syncBackToTop() {
+  function syncScrollState() {
     backToTop.classList.toggle('is-visible', window.scrollY > 400);
+    // 吸顶后（搜索条顶到页首）显示迷你品牌入口。
+    controls.classList.toggle('is-stuck', window.scrollY >= controls.offsetTop);
   }
 
-  window.addEventListener('scroll', syncBackToTop, { passive: true });
+  window.addEventListener('scroll', syncScrollState, { passive: true });
   backToTop.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -511,5 +514,5 @@
   syncSearchClear();
   renderSites({ animate: true });
   updateTheme();
-  syncBackToTop();
+  syncScrollState();
 })();

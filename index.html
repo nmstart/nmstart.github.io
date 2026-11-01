@@ -44,14 +44,19 @@
 
     <main id="main" class="container">
       <section class="controls" aria-label="网站搜索与筛选">
-        <div class="search-box">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
-          <label class="sr-only" for="search-input">搜索网站</label>
-          <input id="search-input" type="search" placeholder="搜索名称、简介或标签…" autocomplete="off" spellcheck="false" />
-          <button class="search-clear" id="search-clear" type="button" aria-label="清除搜索内容" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-          </button>
-          <kbd class="search-shortcut" id="search-shortcut" aria-hidden="true">/</kbd>
+        <div class="search-row">
+          <a class="controls-brand" href="./" aria-label="起点导航首页">
+            <img src="./assets/icons/favicon.png" alt="" width="28" height="28" />
+          </a>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+            <label class="sr-only" for="search-input">搜索网站</label>
+            <input id="search-input" type="search" placeholder="搜索名称、简介或标签…" autocomplete="off" spellcheck="false" />
+            <button class="search-clear" id="search-clear" type="button" aria-label="清除搜索内容" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            </button>
+            <kbd class="search-shortcut" id="search-shortcut" aria-hidden="true">/</kbd>
+          </div>
         </div>
         <nav class="category-list" id="category-list" aria-label="网站分类"></nav>
       </section>
