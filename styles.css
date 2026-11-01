@@ -640,6 +640,12 @@ svg {
     transition: none !important;
     animation: none !important;
   }
+
+  /* 伪元素不受上面的 * 规则约束，需单独关闭视图过渡动画 */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
 }
 
 /* ============ 交互升级（2026-11-01） ============ */
@@ -808,6 +814,14 @@ mark {
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 200ms;
+}
+
+/* 快照拍摄期间禁用元素级过渡，保证新旧快照各自为纯净主题（否则新快照会拍到过渡起点的旧配色，
+   与已瞬间翻转的背景类属性混杂交错淡化，产生块状痕迹） */
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
 }
 
 @media (max-width: 600px) {

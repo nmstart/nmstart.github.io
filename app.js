@@ -362,7 +362,15 @@
   themeToggle.addEventListener('click', () => {
     const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     if (typeof document.startViewTransition === 'function') {
-      document.startViewTransition(() => applyTheme(nextTheme));
+      const viewTransition = document.startViewTransition(() => {
+        // 快照拍摄期间禁用元素级过渡，避免新快照拍到「半新半旧」的混杂画面。
+        document.documentElement.dataset.themeSwitching = 'true';
+        applyTheme(nextTheme);
+      });
+      // 动画完成或被后续切换打断（skip）时都会 settle，属性清理天然可靠。
+      viewTransition.finished.finally(() => {
+        delete document.documentElement.dataset.themeSwitching;
+      });
     } else {
       applyTheme(nextTheme);
     }
