@@ -7,6 +7,8 @@ window.NAV_SITES = [
   { name: 'Arthas', url: 'https://arthas.aliyun.com/', category: 'dev', description: '阿里开源的 Java 应用在线诊断工具。', tags: ['Java', '诊断', '开源'], icon: './assets/icons/arthas.aliyun.com.png' },
   { name: '教育网联合镜像站', url: 'https://mirrors.cernet.edu.cn/', category: 'dev', description: 'Linux 发行版与开发依赖的开源镜像。', tags: ['镜像', 'Linux', 'PyPI'], icon: './assets/icons/mirrors.cernet.edu.cn.svg' },
   { name: '灯塔JSON', url: 'https://json.share888.top/', category: 'dev', description: '在线 JSON 格式化、校验与纠错。', tags: ['JSON', '格式化', '校验'], icon: './assets/icons/json.share888.top.png' },
+  { name: 'Cloudflare', url: 'https://dash.cloudflare.com/', category: 'dev', description: 'CDN、DNS 等服务的管理控制台。', tags: ['CDN', 'DNS', '控制台'], icon: './assets/icons/dash.cloudflare.com.png' },
+  { name: '腾讯云', url: 'https://www.tencentcloud.com/zh', category: 'dev', description: '腾讯云产品文档与服务控制台。', tags: ['云服务', '腾讯', '控制台'], icon: './assets/icons/www.tencentcloud.com.png' },
 
   // 开发文档
   { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'docs', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
@@ -38,4 +40,5 @@ window.NAV_SITES = [
   { name: '阮一峰的网络日志', url: 'https://www.ruanyifeng.com/blog/', category: 'discover', description: '技术文章、科技动态与每周分享。', tags: ['博客', '技术', '周刊'], icon: './assets/icons/ruanyifeng.com.png' },
   { name: 'InfoQ', url: 'https://www.infoq.cn/', category: 'discover', description: '关注软件开发与技术实践的中文社区。', tags: ['技术', '架构', '资讯'], icon: './assets/icons/infoq.svg' },
   { name: 'LINUX DO', url: 'https://linux.do/', category: 'discover', description: '新的理想型技术社区，开发与 AI 资源交流。', tags: ['社区', 'Linux', '技术'], icon: './assets/icons/linux.do.png' },
+  { name: 'IDC Flare', url: 'https://idcflare.com/', category: 'discover', description: '域名、主机与 IDC 信息的交流社区。', tags: ['社区', '域名', 'VPS'], icon: './assets/icons/idcflare.com.png' },
 ];
