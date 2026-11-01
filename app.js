@@ -1,9 +1,15 @@
 (() => {
   'use strict';
 
+  const RECENT_KEY = 'nav-recent-visits';
+  const RECENT_LIMIT = 12;
+  const STAGGER_STEP_MS = 35;
+  const STAGGER_MAX_INDEX = 11;
+
   const sites = Array.isArray(window.NAV_SITES) ? window.NAV_SITES : [];
   const categories = [
     { id: 'all', name: '全部' },
+    { id: 'recent', name: '最近访问' },
     { id: 'dev', name: '开发工具' },
     { id: 'ai', name: '人工智能' },
     { id: 'design', name: '设计资源' },
@@ -16,6 +22,7 @@
   const grid = document.querySelector('#site-grid');
   const template = document.querySelector('#site-card-template');
   const searchInput = document.querySelector('#search-input');
+  const searchClear = document.querySelector('#search-clear');
   const categoryList = document.querySelector('#category-list');
   const resultsCount = document.querySelector('#results-count');
   const clearButton = document.querySelector('#clear-button');
@@ -23,52 +30,129 @@
   const emptyReset = document.querySelector('#empty-reset');
   const themeToggle = document.querySelector('#theme-toggle');
   const themeColor = document.querySelector('meta[name="theme-color"]');
+  const backToTop = document.querySelector('#back-to-top');
+  const toast = document.querySelector('#toast');
 
   document.querySelector('#current-year').textContent = new Date().getFullYear();
 
+  /* ---------- 工具 ---------- */
+
+  const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ESCAPE_MAP[ch]);
+  }
+
+  function highlightText(text, query) {
+    const safe = escapeHtml(text);
+    const keyword = query.trim();
+    if (!keyword) return safe;
+    const pattern = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return safe.replace(new RegExp(pattern, 'gi'), (match) => `<mark>${match}</mark>`);
+  }
+
+  function showToast(message) {
+    clearTimeout(showToast.timer);
+    toast.textContent = message;
+    toast.hidden = false;
+    requestAnimationFrame(() => {
+      toast.dataset.visible = 'true';
+    });
+    showToast.timer = setTimeout(() => {
+      delete toast.dataset.visible;
+      setTimeout(() => {
+        toast.hidden = true;
+      }, 200);
+    }, 1600);
+  }
+
+  /* ---------- 最近访问 ---------- */
+
+  function readRecent() {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list.filter((item) => item && typeof item.url === 'string') : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function pushRecent(url) {
+    try {
+      const list = readRecent().filter((item) => item.url !== url);
+      list.unshift({ url, t: Date.now() });
+      localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_LIMIT)));
+    } catch (_) {
+      // 存储不可用时静默降级：不影响本次访问记录之外的功能。
+    }
+  }
+
+  const recentUrlSet = () => new Set(readRecent().map((item) => item.url));
+
+  /* ---------- 分类 ---------- */
+
+  function countForCategory(id) {
+    if (id === 'all') return sites.length;
+    if (id === 'recent') return readRecent().length;
+    return sites.filter((site) => site.category === id).length;
+  }
+
   function createCategoryButtons() {
     categories.forEach((category) => {
-      const count = category.id === 'all'
-        ? sites.length
-        : sites.filter((site) => site.category === category.id).length;
       const button = document.createElement('button');
       button.className = 'category-button';
       button.type = 'button';
       button.dataset.category = category.id;
-      button.setAttribute('aria-pressed', String(state.category === category.id));
-      button.setAttribute('aria-label', `${category.name}，${count} 个网站`);
 
       const name = document.createElement('span');
       name.textContent = category.name;
       const countLabel = document.createElement('span');
       countLabel.className = 'category-count';
-      countLabel.textContent = count;
       button.append(name, countLabel);
 
       button.addEventListener('click', () => {
+        if (state.category === category.id) return;
         state.category = category.id;
         updateCategoryButtons();
-        renderSites();
+        syncUrl();
+        renderSites({ animate: true });
       });
       categoryList.append(button);
     });
+    updateCategoryButtons();
   }
 
   function updateCategoryButtons() {
     categoryList.querySelectorAll('.category-button').forEach((button) => {
-      button.setAttribute('aria-pressed', String(button.dataset.category === state.category));
+      const id = button.dataset.category;
+      const count = countForCategory(id);
+      button.setAttribute('aria-pressed', String(id === state.category));
+      button.setAttribute('aria-label', `${categories.find((c) => c.id === id).name}，${count} 个网站`);
+      const countLabel = button.querySelector('.category-count');
+      if (countLabel) countLabel.textContent = count;
+      // 「最近访问」在没有记录时不占位。
+      button.hidden = id === 'recent' && count === 0;
     });
   }
 
+  /* ---------- 筛选与渲染 ---------- */
+
   function getFilteredSites() {
     const query = state.query.trim().toLocaleLowerCase();
-    return sites.filter((site) => {
-      const inCategory = state.category === 'all' || site.category === state.category;
-      if (!inCategory) return false;
-      if (!query) return true;
-      const searchable = [site.name, site.description, ...(site.tags || [])].join(' ').toLocaleLowerCase();
-      return searchable.includes(query);
-    });
+    let list = sites;
+
+    if (state.category === 'recent') {
+      const rank = new Map(readRecent().map((item, index) => [item.url, index]));
+      list = sites.filter((site) => rank.has(site.url)).sort((a, b) => rank.get(a.url) - rank.get(b.url));
+    } else if (state.category !== 'all') {
+      list = sites.filter((site) => site.category === state.category);
+    }
+
+    if (!query) return list;
+    return list.filter((site) =>
+      [site.name, site.description, ...(site.tags || [])].join(' ').toLocaleLowerCase().includes(query)
+    );
   }
 
   async function copyText(text) {
@@ -99,6 +183,7 @@
         button.dataset.copied = 'true';
         button.setAttribute('aria-label', '网址已复制');
         button.title = '网址已复制';
+        showToast(`已复制 ${site.name} 的网址`);
         clearTimeout(copiedTimer);
         copiedTimer = setTimeout(() => {
           delete button.dataset.copied;
@@ -107,14 +192,17 @@
         }, 1600);
       } catch (_) {
         button.title = '复制失败，请手动复制';
+        showToast('复制失败，请手动复制');
       }
     });
   }
 
-  function createSiteCard(site) {
+  function createSiteCard(site, query) {
     const card = template.content.firstElementChild.cloneNode(true);
     const link = card.querySelector('.card-link');
+    const avatar = card.querySelector('.site-avatar');
     const favicon = card.querySelector('.site-favicon');
+    const fallback = card.querySelector('.site-fallback');
     const name = card.querySelector('.site-name');
     const description = card.querySelector('.site-description');
     const copyButton = card.querySelector('.copy-button');
@@ -122,37 +210,104 @@
     card.dataset.category = site.category;
     link.href = site.url;
     link.setAttribute('aria-label', `${site.name}：${site.description}（在新窗口打开）`);
+
+    fallback.textContent = site.name.trim().slice(0, 1) || '?';
+    favicon.addEventListener('error', () => {
+      avatar.dataset.fallback = 'true';
+    });
     favicon.src = site.icon || `${new URL(site.url).origin}/favicon.ico`;
-    name.textContent = site.name;
-    description.textContent = site.description;
+
+    if (recentUrlSet().has(site.url)) {
+      avatar.dataset.recent = 'true';
+    }
+
+    name.innerHTML = highlightText(site.name, query);
+    description.innerHTML = highlightText(site.description, query);
+
+    link.addEventListener('click', () => {
+      pushRecent(site.url);
+      avatar.dataset.recent = 'true';
+      updateCategoryButtons();
+    });
+
     attachCopyButton(copyButton, site);
     return card;
   }
 
-  function renderSites() {
+  function renderSites({ animate = false } = {}) {
+    // 最近访问记录被外部清空时，回退到「全部」。
+    if (state.category === 'recent' && readRecent().length === 0) {
+      state.category = 'all';
+    }
     const filtered = getFilteredSites();
+    const query = state.query.trim();
     const fragment = document.createDocumentFragment();
-    filtered.forEach((site) => fragment.append(createSiteCard(site)));
+
+    filtered.forEach((site, index) => {
+      const card = createSiteCard(site, query);
+      if (animate && index <= STAGGER_MAX_INDEX) {
+        card.style.setProperty('--delay', `${index * STAGGER_STEP_MS}ms`);
+      }
+      fragment.append(card);
+    });
     grid.replaceChildren(fragment);
+    grid.dataset.animate = animate ? 'true' : 'false';
 
     const categoryName = categories.find((category) => category.id === state.category)?.name;
     resultsCount.textContent = state.category === 'all'
       ? `共 ${filtered.length} 个网站`
       : `${categoryName} · ${filtered.length} 个网站`;
-    const hasFilters = Boolean(state.query.trim()) || state.category !== 'all';
+
+    const hasFilters = Boolean(query) || state.category !== 'all';
     clearButton.hidden = !hasFilters;
     emptyState.hidden = filtered.length !== 0;
     grid.hidden = filtered.length === 0;
+    updateCategoryButtons();
   }
 
-  function resetFilters({ focus = false } = {}) {
+  /* ---------- URL 状态同步 ---------- */
+
+  function syncUrl() {
+    const params = new URLSearchParams();
+    if (state.query.trim()) params.set('q', state.query.trim());
+    if (state.category !== 'all') params.set('cat', state.category);
+    const search = params.toString();
+    try {
+      history.replaceState(null, '', search ? `${location.pathname}?${search}${location.hash}` : `${location.pathname}${location.hash}`);
+    } catch (_) {
+      // file:// 等场景下 replaceState 不可用，静默降级为仅内存状态。
+    }
+  }
+
+  function readUrlState() {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('cat');
+    state.query = params.get('q') || '';
+    state.category = categories.some((category) => category.id === cat) ? cat : 'all';
+    searchInput.value = state.query;
+  }
+
+  window.addEventListener('popstate', () => {
+    readUrlState();
+    updateCategoryButtons();
+    syncSearchClear();
+    renderSites();
+  });
+
+  /* ---------- 重置筛选 ---------- */
+
+  function resetFilters({ focus = false, animate = true } = {}) {
     state.query = '';
     state.category = 'all';
     searchInput.value = '';
+    syncSearchClear();
     updateCategoryButtons();
-    renderSites();
+    syncUrl();
+    renderSites({ animate });
     if (focus) searchInput.focus();
   }
+
+  /* ---------- 主题 ---------- */
 
   function updateTheme() {
     const isDark = document.documentElement.dataset.theme === 'dark';
@@ -160,8 +315,35 @@
     themeColor.content = isDark ? '#101318' : '#f6f7f9';
   }
 
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem('nav-theme', theme);
+    } catch (_) {
+      // 隐私模式下存储不可用时，仍可在当前页面切换主题。
+    }
+    updateTheme();
+  }
+
+  themeToggle.addEventListener('click', () => {
+    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    if (typeof document.startViewTransition === 'function') {
+      document.startViewTransition(() => applyTheme(nextTheme));
+    } else {
+      applyTheme(nextTheme);
+    }
+  });
+
+  /* ---------- 搜索 ---------- */
+
+  function syncSearchClear() {
+    searchClear.hidden = !searchInput.value;
+  }
+
   searchInput.addEventListener('input', (event) => {
     state.query = event.target.value;
+    syncSearchClear();
+    syncUrl();
     renderSites();
   });
 
@@ -170,36 +352,94 @@
       event.stopPropagation();
       state.query = '';
       searchInput.value = '';
+      syncSearchClear();
+      syncUrl();
       renderSites();
     }
   });
 
-  document.addEventListener('keydown', (event) => {
-    const target = event.target;
-    const isTyping = target instanceof HTMLInputElement
+  searchClear.addEventListener('click', () => {
+    state.query = '';
+    searchInput.value = '';
+    syncSearchClear();
+    syncUrl();
+    renderSites();
+    searchInput.focus();
+  });
+
+  /* ---------- 快捷键与键盘网格导航 ---------- */
+
+  function isTypingTarget(target) {
+    return target instanceof HTMLInputElement
       || target instanceof HTMLTextAreaElement
       || target.isContentEditable;
-    if (event.key === '/' && !isTyping && !event.metaKey && !event.ctrlKey && !event.altKey) {
+  }
+
+  function getGridColumns(links) {
+    if (links.length < 2) return links.length || 1;
+    const firstTop = links[0].offsetTop;
+    return Math.max(1, links.filter((link) => link.offsetTop === firstTop).length);
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target;
+
+    if (event.key === '/' && !isTypingTarget(target)) {
       event.preventDefault();
       searchInput.focus();
+      return;
     }
+
+    if (event.key === 'Escape' && isTypingTarget(target)) {
+      target.blur();
+      return;
+    }
+
+    const arrowKeys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'];
+    if (!arrowKeys.includes(event.key) || isTypingTarget(target)) return;
+
+    const links = Array.from(grid.querySelectorAll('.card-link'));
+    if (!links.length) return;
+
+    const active = document.activeElement;
+    const current = active && active.closest ? active.closest('.card-link') : null;
+    if (!current && active !== document.body) return;
+
+    const index = current ? links.indexOf(current) : -1;
+    const columns = getGridColumns(links);
+    let next = index;
+
+    if (event.key === 'ArrowRight') next = index < 0 ? 0 : Math.min(index + 1, links.length - 1);
+    if (event.key === 'ArrowLeft') next = index < 0 ? links.length - 1 : Math.max(index - 1, 0);
+    if (event.key === 'ArrowDown') next = index < 0 ? 0 : Math.min(index + columns, links.length - 1);
+    if (event.key === 'ArrowUp') next = index < 0 ? 0 : Math.max(index - columns, 0);
+
+    if (next === index) return;
+    event.preventDefault();
+    links[next].focus();
   });
 
   clearButton.addEventListener('click', () => resetFilters({ focus: true }));
   emptyReset.addEventListener('click', () => resetFilters({ focus: true }));
 
-  themeToggle.addEventListener('click', () => {
-    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = nextTheme;
-    try {
-      localStorage.setItem('nav-theme', nextTheme);
-    } catch (_) {
-      // 隐私模式下存储不可用时，仍可在当前页面切换主题。
-    }
-    updateTheme();
+  /* ---------- 回到顶部 ---------- */
+
+  function syncBackToTop() {
+    backToTop.classList.toggle('is-visible', window.scrollY > 400);
+  }
+
+  window.addEventListener('scroll', syncBackToTop, { passive: true });
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  /* ---------- 启动 ---------- */
+
+  readUrlState();
   createCategoryButtons();
-  renderSites();
+  syncSearchClear();
+  renderSites({ animate: true });
   updateTheme();
+  syncBackToTop();
 })();
