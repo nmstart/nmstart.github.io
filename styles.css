@@ -142,6 +142,12 @@ svg {
   border-radius: 9px;
   background: var(--accent);
   color: white;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.brand:hover .brand-mark {
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 :root[data-theme="dark"] .brand-mark {
@@ -152,6 +158,11 @@ svg {
   width: 20px;
   height: 20px;
   stroke-width: 2;
+}
+
+.brand-name-sub {
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .theme-toggle {
