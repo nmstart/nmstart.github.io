@@ -33,6 +33,7 @@
   const themeColor = document.querySelector('meta[name="theme-color"]');
   const backToTop = document.querySelector('#back-to-top');
   const controls = document.querySelector('.controls');
+  const mainEl = document.querySelector('main');
   const toast = document.querySelector('#toast');
   const searchShortcut = document.querySelector('#search-shortcut');
 
@@ -498,8 +499,8 @@
 
   function syncScrollState() {
     backToTop.classList.toggle('is-visible', window.scrollY > 400);
-    // 吸顶后（搜索条顶到页首）显示迷你品牌入口。
-    controls.classList.toggle('is-stuck', window.scrollY >= controls.offsetTop);
+    // sticky 元素的 offsetTop 会随吸顶位置移动，不能作阈值；用 main 的文档位置（搜索条的自然位置）。
+    controls.classList.toggle('is-stuck', window.scrollY >= mainEl.offsetTop);
   }
 
   window.addEventListener('scroll', syncScrollState, { passive: true });
