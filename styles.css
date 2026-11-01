@@ -577,52 +577,6 @@ svg {
   }
 }
 
-@media (max-width: 600px) {
-  .site-header,
-  .container,
-  .site-footer {
-    width: min(100% - 32px, 1120px);
-  }
-
-  .site-header {
-    height: 64px;
-  }
-
-  .controls {
-    padding-top: 6px;
-  }
-
-  .search-box input {
-    height: 48px;
-    border-radius: 12px;
-  }
-
-  .search-shortcut {
-    display: none;
-  }
-
-  .category-list {
-    margin-top: 10px;
-  }
-
-  .category-button {
-    min-height: 36px;
-    padding: 7px 8px;
-    font-size: 13px;
-  }
-
-  .copy-button {
-    right: 8px;
-    top: 8px;
-  }
-
-  .site-footer {
-    margin-top: 40px;
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
 /* 手机宽度降为单列:横向卡片有全宽可用,名称与描述不再被截成两三个字。 */
 @media (max-width: 520px) {
   .site-grid {
@@ -823,7 +777,52 @@ mark {
   transition: none !important;
 }
 
+/* 手机端覆盖统一收拢于此,且位于全部基准规则之后,保证同优先级覆盖生效 */
 @media (max-width: 600px) {
+  .site-header,
+  .container,
+  .site-footer {
+    width: min(100% - 32px, 1120px);
+  }
+
+  .site-header {
+    height: 64px;
+  }
+
+  .controls {
+    padding-top: 6px;
+  }
+
+  .search-box input {
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .search-shortcut {
+    display: none;
+  }
+
+  .category-list {
+    margin-top: 10px;
+  }
+
+  .category-button {
+    min-height: 36px;
+    padding: 7px 8px;
+    font-size: 13px;
+  }
+
+  .copy-button {
+    right: 8px;
+    top: 8px;
+  }
+
+  .site-footer {
+    margin-top: 40px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .toast {
     bottom: 20px;
   }
