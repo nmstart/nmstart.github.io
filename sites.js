@@ -4,6 +4,7 @@ window.NAV_SITES = [
   // 开发工具
   { name: 'GitHub', url: 'https://github.com/', category: 'dev', description: '代码托管、协作开发与开源项目社区。', tags: ['代码', '开源', 'Git'], icon: './assets/icons/github.svg' },
   { name: 'Vite', url: 'https://vite.dev/', category: 'dev', description: '快速、轻量的现代前端构建工具。', tags: ['构建', '前端', '工具'], icon: './assets/icons/vite.svg' },
+  { name: 'Arthas', url: 'https://arthas.aliyun.com/', category: 'dev', description: '阿里开源的 Java 应用在线诊断工具。', tags: ['Java', '诊断', '开源'], icon: './assets/icons/arthas.aliyun.com.png' },
 
   // 开发文档
   { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'docs', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
@@ -11,6 +12,7 @@ window.NAV_SITES = [
   // 人工智能
   { name: 'DeepSeek', url: 'https://chat.deepseek.com/', category: 'ai', description: '支持推理、问答与编程的 AI 助手。', tags: ['推理', '编程', '国产'], icon: './assets/icons/deepseek.svg' },
   { name: 'Hugging Face', url: 'https://huggingface.co/', category: 'ai', description: '机器学习模型、数据集与应用社区。', tags: ['模型', '数据集', '开源'], icon: './assets/icons/huggingface.svg' },
+  { name: 'OpenChamber', url: 'https://openchamber.dev/zh/', category: 'ai', description: '在本地或服务器运行 AI 编程智能体的开发环境。', tags: ['AI', '智能体', '编程'], icon: './assets/icons/openchamber.dev.svg' },
 
   // 设计资源
   { name: 'Figma', url: 'https://www.figma.com/', category: 'design', description: '在线界面设计与实时协作平台。', tags: ['UI', '原型', '协作'], icon: './assets/icons/figma.com.png' },
