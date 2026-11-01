@@ -9,6 +9,8 @@ window.NAV_SITES = [
 
   // 开发文档
   { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'docs', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
+  { name: 'LangChain', url: 'https://docs.langchain.com/', category: 'docs', description: '构建 LLM 应用与 AI Agent 的框架文档。', tags: ['LLM', 'Agent', '框架'], icon: './assets/icons/docs.langchain.com.png' },
+  { name: 'Spring', url: 'https://spring.io/', category: 'docs', description: 'Java 企业级开发框架官方站与指南。', tags: ['Java', '框架', '后端'], icon: './assets/icons/spring.io.svg' },
 
   // 人工智能
   { name: 'DeepSeek', url: 'https://chat.deepseek.com/', category: 'ai', description: '支持推理、问答与编程的 AI 助手。', tags: ['推理', '编程', '国产'], icon: './assets/icons/deepseek.svg' },
