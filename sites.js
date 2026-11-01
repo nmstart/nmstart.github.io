@@ -6,6 +6,7 @@ window.NAV_SITES = [
   { name: 'Vite', url: 'https://vite.dev/', category: 'dev', description: '快速、轻量的现代前端构建工具。', tags: ['构建', '前端', '工具'], icon: './assets/icons/vite.svg' },
   { name: 'Arthas', url: 'https://arthas.aliyun.com/', category: 'dev', description: '阿里开源的 Java 应用在线诊断工具。', tags: ['Java', '诊断', '开源'], icon: './assets/icons/arthas.aliyun.com.png' },
   { name: '教育网联合镜像站', url: 'https://mirrors.cernet.edu.cn/', category: 'dev', description: 'Linux 发行版与开发依赖的开源镜像。', tags: ['镜像', 'Linux', 'PyPI'], icon: './assets/icons/mirrors.cernet.edu.cn.svg' },
+  { name: '灯塔JSON', url: 'https://json.share888.top/', category: 'dev', description: '在线 JSON 格式化、校验与纠错。', tags: ['JSON', '格式化', '校验'], icon: './assets/icons/json.share888.top.png' },
 
   // 开发文档
   { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'docs', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
