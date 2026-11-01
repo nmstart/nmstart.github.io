@@ -37,6 +37,7 @@
   const mainEl = document.querySelector('main');
   const toast = document.querySelector('#toast');
   const searchShortcut = document.querySelector('#search-shortcut');
+  const resetOrder = document.querySelector('#reset-order');
 
   document.querySelector('#current-year').textContent = new Date().getFullYear();
 
@@ -94,6 +95,46 @@
   }
 
   const recentUrlSet = () => new Set(readRecent().map((item) => item.url));
+
+  /* ---------- 站点排序(本地持久化) ---------- */
+
+  const ORDER_KEY = 'nav-site-order';
+
+  function readOrder() {
+    try {
+      const raw = localStorage.getItem(ORDER_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list.filter((item) => typeof item === 'string') : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function writeOrder(list) {
+    try {
+      localStorage.setItem(ORDER_KEY, JSON.stringify(list));
+    } catch (_) {
+      // 存储不可用时静默降级:顺序仅在本会话内生效。
+    }
+  }
+
+  // 把可见视图内 from→to 的移动映射回全局顺序:以目标位的可见项为锚点插入,
+  // 夹在两者之间、未在本视图显示的站点保持原有邻接关系。
+  function reorderGlobal(cards, from, to) {
+    const moved = cards[from]?.dataset.url;
+    const neighbor = cards[to]?.dataset.url;
+    if (!moved || !neighbor || moved === neighbor) return;
+    const current = readOrder();
+    const known = new Set(current);
+    const fullOrder = [...current, ...sites.filter((site) => !known.has(site.url)).map((site) => site.url)];
+    const rest = fullOrder.filter((url) => url !== moved);
+    const at = rest.indexOf(neighbor);
+    if (at === -1) return;
+    const next = to < from
+      ? [...rest.slice(0, at), moved, ...rest.slice(at)]
+      : [...rest.slice(0, at + 1), moved, ...rest.slice(at + 1)];
+    writeOrder(next);
+  }
 
   /* ---------- 分类 ---------- */
 
@@ -206,6 +247,13 @@
       list = sites.filter((site) => site.category === state.category);
     }
 
+    // 自定义顺序作用于除「最近访问」外的全部视图;未登记的站点按原表相对顺序殿后。
+    if (state.category !== 'recent') {
+      const rank = new Map(readOrder().map((url, index) => [url, index]));
+      const NO_RANK = Number.MAX_SAFE_INTEGER;
+      list = list.slice().sort((a, b) => (rank.get(a.url) ?? NO_RANK) - (rank.get(b.url) ?? NO_RANK));
+    }
+
     if (!query) return list;
     return list.filter((site) =>
       [site.name, site.description, ...(site.tags || [])].join(' ').toLocaleLowerCase().includes(query)
@@ -265,6 +313,7 @@
     const copyButton = card.querySelector('.copy-button');
 
     card.dataset.category = site.category;
+    card.dataset.url = site.url;
     link.href = site.url;
     link.setAttribute('aria-label', `${site.name}：${site.description}（在新窗口打开）`);
 
@@ -320,8 +369,11 @@
     const hasFilters = Boolean(query) || state.category !== 'all';
     clearButton.hidden = !hasFilters;
     clearRecent.hidden = state.category !== 'recent';
+    resetOrder.hidden = state.category === 'recent' || readOrder().length === 0;
     emptyState.hidden = filtered.length !== 0;
     grid.hidden = filtered.length === 0;
+    // 搜索子集与「最近访问」的顺序语义特殊,不允许拖拽;单卡片无可排。
+    grid.classList.toggle('is-orderable', state.category !== 'recent' && !query && filtered.length > 1);
     updateCategoryButtons();
   }
 
@@ -462,6 +514,16 @@
       return;
     }
 
+    // Alt+↑/↓:对聚焦的卡片做前后微调(无鼠标场景的排序入口)
+    if (event.altKey && !event.metaKey && !event.ctrlKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      const card = event.target instanceof Element ? event.target.closest('.site-card') : null;
+      if (card && isDragEnabled()) {
+        event.preventDefault();
+        moveCardByKeyboard(card, event.key === 'ArrowUp' ? -1 : 1);
+      }
+      return;
+    }
+
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const target = event.target;
 
@@ -498,6 +560,247 @@
     if (next === index) return;
     event.preventDefault();
     links[next].focus();
+  });
+
+  /* ---------- 拖拽排序 ---------- */
+
+  const drag = {
+    active: false,
+    pointerId: null,
+    card: null,
+    cards: null,
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+    offsetX: 0,
+    offsetY: 0,
+    appliedX: 0,
+    appliedY: 0,
+    longPressTimer: 0,
+    fromIndex: -1,
+    index: -1,
+    rects: [],
+    scrollY: 0,
+    suppressClick: false,
+  };
+
+  const isDragEnabled = () => grid.classList.contains('is-orderable');
+
+  function cleanupDragListeners() {
+    window.removeEventListener('pointermove', onDragPointerMove);
+    window.removeEventListener('pointerup', onDragPointerUp);
+    window.removeEventListener('pointercancel', onDragPointerCancel);
+    window.removeEventListener('scroll', onDragScroll);
+    document.removeEventListener('touchmove', preventTouchScroll);
+  }
+
+  function resetDragState() {
+    drag.active = false;
+    drag.pointerId = null;
+    drag.card = null;
+    drag.cards = null;
+    drag.fromIndex = -1;
+    drag.index = -1;
+  }
+
+  function preventTouchScroll(event) {
+    if (drag.active) event.preventDefault();
+  }
+
+  // 拖拽期间页面滚动会让按视口坐标记录的槽位失效,跟随滚动量整体平移修正。
+  function onDragScroll() {
+    if (!drag.active) return;
+    const dy = window.scrollY - drag.scrollY;
+    if (!dy) return;
+    drag.rects = drag.rects.map((rect) => ({ ...rect, top: rect.top + dy, bottom: rect.bottom + dy }));
+    drag.scrollY = window.scrollY;
+  }
+
+  grid.addEventListener('pointerdown', (event) => {
+    if (!isDragEnabled() || drag.active || event.button > 0) return;
+    if (event.target.closest('.copy-button')) return;
+    const card = event.target.closest('.site-card');
+    if (!card) return;
+    drag.pointerId = event.pointerId;
+    drag.card = card;
+    drag.startX = event.clientX;
+    drag.startY = event.clientY;
+    drag.suppressClick = false;
+    // 鼠标按住后位移超阈值即拖;触屏先长按,期间滑动手势让路给滚动。
+    if (event.pointerType === 'touch') {
+      drag.longPressTimer = setTimeout(() => activateDrag(event.clientX, event.clientY), 300);
+    }
+    window.addEventListener('pointermove', onDragPointerMove);
+    window.addEventListener('pointerup', onDragPointerUp);
+    window.addEventListener('pointercancel', onDragPointerCancel);
+    window.addEventListener('scroll', onDragScroll, { passive: true });
+  });
+
+  function activateDrag(x, y) {
+    const cards = [...grid.querySelectorAll('.site-card')];
+    if (cards.length < 2) { cancelPendingDrag(); return; }
+    clearTimeout(drag.longPressTimer);
+    drag.active = true;
+    // 缓存拖前的卡片数组:松手时要以此数组和起点/终点索引计算全局顺序,
+    // 因为拖拽过程中 DOM 已被 FLIP 交换,实时查询会拿错站点。
+    drag.cards = cards;
+    drag.rects = cards.map((card) => card.getBoundingClientRect());
+    drag.fromIndex = cards.indexOf(drag.card);
+    drag.index = drag.fromIndex;
+    const rect = drag.rects[drag.fromIndex];
+    drag.offsetX = x - rect.left;
+    drag.offsetY = y - rect.top;
+    drag.appliedX = 0;
+    drag.appliedY = 0;
+    drag.lastX = x;
+    drag.lastY = y;
+    drag.scrollY = window.scrollY;
+    drag.suppressClick = true;
+    drag.card.classList.add('is-dragging');
+    grid.classList.add('is-ordering');
+    try { drag.card.setPointerCapture(drag.pointerId); } catch (_) { /* 捕获失败不阻断拖拽 */ }
+    document.addEventListener('touchmove', preventTouchScroll, { passive: false });
+    positionDragged();
+  }
+
+  function cancelPendingDrag() {
+    clearTimeout(drag.longPressTimer);
+    cleanupDragListeners();
+    resetDragState();
+  }
+
+  function onDragPointerMove(event) {
+    if (event.pointerId !== drag.pointerId || !drag.card) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (!drag.active) {
+      if (event.pointerType === 'touch') {
+        if (Math.hypot(dx, dy) > 10) cancelPendingDrag();
+        return;
+      }
+      if (Math.hypot(dx, dy) > 6) activateDrag(event.clientX, event.clientY);
+      return;
+    }
+    drag.lastX = event.clientX;
+    drag.lastY = event.clientY;
+    positionDragged();
+    moveDraggedTo(hitTestSlot(drag.lastX, drag.lastY));
+  }
+
+  function positionDragged() {
+    const rect = drag.card.getBoundingClientRect();
+    // rect 含当前 transform,先还原出布局位置,再计算指向目标位置所需位移
+    const baseLeft = rect.left - drag.appliedX;
+    const baseTop = rect.top - drag.appliedY;
+    drag.appliedX = drag.lastX - drag.offsetX - baseLeft;
+    drag.appliedY = drag.lastY - drag.offsetY - baseTop;
+    drag.card.style.transform = `translate(${drag.appliedX}px, ${drag.appliedY}px)`;
+  }
+
+  // 以卡片中心的最近槽位为目标,天然兼容多列网格。
+  function hitTestSlot(x, y) {
+    let best = drag.index;
+    let bestDist = Infinity;
+    drag.rects.forEach((rect, index) => {
+      const dist = (x - (rect.left + rect.width / 2)) ** 2 + (y - (rect.top + rect.height / 2)) ** 2;
+      if (dist < bestDist) { bestDist = dist; best = index; }
+    });
+    return best;
+  }
+
+  function moveDraggedTo(target) {
+    if (target === drag.index) return;
+    const cards = [...grid.querySelectorAll('.site-card')];
+    const anchor = cards[target];
+    if (!anchor) return;
+    const siblings = cards.filter((card) => card !== drag.card);
+    // 先清掉上一轮 FLIP 的位移,以布局位置为基准计算本轮反演
+    siblings.forEach((card) => {
+      card.style.transition = 'none';
+      card.style.transform = '';
+    });
+    void grid.offsetWidth;
+    const before = new Map(siblings.map((card) => [card, card.getBoundingClientRect()]));
+    if (target > drag.index) anchor.after(drag.card);
+    else anchor.before(drag.card);
+    drag.index = target;
+    siblings.forEach((card) => {
+      const first = before.get(card);
+      const last = card.getBoundingClientRect();
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+      if (dx || dy) {
+        card.style.transition = 'none';
+        card.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+    });
+    void grid.offsetWidth;
+    siblings.forEach((card) => {
+      card.style.transition = '';
+      if (card.style.transform) {
+        requestAnimationFrame(() => { card.style.transform = ''; });
+      }
+    });
+    positionDragged();
+  }
+
+  function onDragPointerUp(event) {
+    if (event.pointerId !== drag.pointerId) return;
+    const wasActive = drag.active;
+    clearTimeout(drag.longPressTimer);
+    cleanupDragListeners();
+    if (!wasActive) { resetDragState(); return; }
+    if (drag.index !== drag.fromIndex) {
+      reorderGlobal(drag.cards, drag.fromIndex, drag.index);
+      resetOrder.hidden = readOrder().length === 0;
+    }
+    finishDrag();
+  }
+
+  function onDragPointerCancel(event) {
+    if (event.pointerId !== drag.pointerId) return;
+    clearTimeout(drag.longPressTimer);
+    cleanupDragListeners();
+    if (drag.active) renderSites(); // 丢弃拖拽中的视觉重排,以存储顺序为准
+    finishDrag();
+  }
+
+  function finishDrag() {
+    if (drag.card) {
+      drag.card.classList.remove('is-dragging');
+      drag.card.style.transform = '';
+    }
+    grid.classList.remove('is-ordering');
+    resetDragState();
+  }
+
+  function moveCardByKeyboard(card, delta) {
+    const cards = [...grid.querySelectorAll('.site-card')];
+    const from = cards.indexOf(card);
+    const to = from + delta;
+    if (from === -1 || to < 0 || to >= cards.length) return;
+    reorderGlobal(cards, from, to);
+    renderSites();
+    grid.querySelectorAll('.site-card')[to]?.querySelector('.card-link')?.focus();
+  }
+
+  // 拖拽激活过的手势,释放时的一次 click 不应打开站点
+  grid.addEventListener('click', (event) => {
+    if (!drag.suppressClick) return;
+    drag.suppressClick = false;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+
+  grid.addEventListener('contextmenu', (event) => {
+    if (drag.active) event.preventDefault();
+  });
+
+  resetOrder.addEventListener('click', () => {
+    writeOrder([]);
+    renderSites({ animate: true });
+    showToast('已恢复默认排序');
   });
 
   clearButton.addEventListener('click', () => resetFilters({ focus: true }));

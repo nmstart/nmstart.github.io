@@ -837,6 +837,34 @@ mark {
   }
 }
 
+/* ============ 拖拽排序 ============ */
+.site-grid.is-orderable .site-card {
+  cursor: grab;
+  -webkit-touch-callout: none;
+}
+
+.site-grid.is-orderable .card-link {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 拖拽进行中:被拖卡片浮起,兄弟卡片只保留 FLIP 位移过渡 */
+.site-grid.is-ordering .site-card {
+  transition-property: transform;
+}
+
+.site-grid.is-ordering .site-card:not(.is-dragging) {
+  pointer-events: none;
+}
+
+.site-card.is-dragging {
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  box-shadow: var(--shadow);
+  transition: none;
+}
+
 /* ============ 悬停反馈(仅精确指针) ============ */
 /* 触屏设备没有 hover,悬停样式限定在鼠标环境,避免点击后状态残留;
    复制按钮在触屏上因此常显,桌面端保留悬停浮现。 */
