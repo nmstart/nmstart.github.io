@@ -155,8 +155,8 @@ svg {
 }
 
 .theme-toggle {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -324,6 +324,7 @@ svg {
 }
 
 .category-button {
+  position: relative;
   flex: 0 0 auto;
   min-height: 38px;
   padding: 8px 10px;
@@ -334,6 +335,16 @@ svg {
   font-size: 14px;
   cursor: pointer;
   transition: color 160ms ease;
+}
+
+/* 热区竖向垫到 44px;横向不外扩,避免与相邻分类重叠 */
+.category-button::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  right: 0;
 }
 
 .category-button:hover {
@@ -367,7 +378,7 @@ svg {
 }
 
 .text-button {
-  padding: 6px 0 6px 12px;
+  padding: 12px 0 12px 12px;
   border: 0;
   background: transparent;
   color: var(--accent);
@@ -485,6 +496,13 @@ svg {
   opacity: 0;
   transform: translateY(2px);
   transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+/* 视觉 28px,热区外扩到 44px,方便手指点按 */
+.copy-button::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .site-card:hover .copy-button,
@@ -754,6 +772,13 @@ mark {
   transition: background 160ms ease, color 160ms ease;
 }
 
+/* 热区外扩到 48px */
+.search-clear::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
 .search-clear:hover {
   background: var(--surface);
   color: var(--text);
@@ -817,8 +842,8 @@ mark {
   right: 24px;
   bottom: 24px;
   z-index: 55;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1px solid var(--border);
