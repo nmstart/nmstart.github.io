@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JS 语法检查
+        run: |
+          node --check app.js
+          node --check sites.js
+
+      - name: 静态资源引用完整性
+        run: |
+          for f in styles.css sites.js app.js; do
+            grep -qF "./$f" index.html || { echo "index.html 缺少 ./$f 引用"; exit 1; }
+          done
+          node -e '
+            const fs = require("fs");
+            const src = fs.readFileSync("sites.js", "utf8");
+            const icons = [...src.matchAll(/icon:\s*[\x27"]([^\x27"]+)[\x27"]/g)].map((m) => m[1]);
+            if (!icons.length) { console.error("sites.js 中未找到 icon 字段"); process.exit(1); }
+            const missing = icons.filter((p) => !fs.existsSync(p));
+            if (missing.length) { console.error("缺失图标文件:", missing.join(", ")); process.exit(1); }
+            console.log("icon 引用完整:", icons.length, "个");
+          '
+
+      - name: 数据卫生检查
+        run: |
+          node -e '
+            global.window = {};
+            require("./sites.js");
+            const sites = global.window.NAV_SITES;
+            const valid = new Set(["dev", "ai", "design", "learn", "productivity", "discover"]);
+            const urls = new Set();
+            let fail = 0;
+            for (const s of sites) {
+              if (!s.name || !s.url || !s.description || !valid.has(s.category)) {
+                console.error("记录字段不合法:", s.name);
+                fail = 1;
+              }
+              if (urls.has(s.url)) { console.error("URL 重复:", s.url); fail = 1; }
+              urls.add(s.url);
+            }
+            if (fail) process.exit(1);
+            console.log("站点数据通过:", sites.length, "条");
+          '
+
+      - name: 空白字符检查
+        run: git diff --check HEAD
