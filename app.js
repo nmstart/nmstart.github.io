@@ -24,7 +24,6 @@
   const themeToggle = document.querySelector('#theme-toggle');
   const themeColor = document.querySelector('meta[name="theme-color"]');
 
-  document.querySelector('#site-total').textContent = sites.length;
   document.querySelector('#current-year').textContent = new Date().getFullYear();
 
   function createCategoryButtons() {
@@ -72,10 +71,48 @@
     });
   }
 
+  function loadFavicon(image, site) {
+    const avatar = image.closest('.site-avatar');
+    const { hostname, origin } = new URL(site.url);
+    const sources = [
+      site.icon,
+      `${origin}/favicon.ico`,
+      `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`,
+    ].filter((source, index, list) => source && list.indexOf(source) === index);
+    let sourceIndex = 0;
+
+    const showFallback = () => {
+      avatar.dataset.state = 'error';
+      image.hidden = true;
+      image.removeAttribute('src');
+    };
+
+    const tryNextSource = () => {
+      sourceIndex += 1;
+      if (sourceIndex >= sources.length) {
+        showFallback();
+        return;
+      }
+      image.src = sources[sourceIndex];
+    };
+
+    image.addEventListener('load', () => {
+      const currentSource = sources[sourceIndex];
+      if (image.naturalWidth > 0 || currentSource.endsWith('.svg')) {
+        avatar.dataset.state = 'loaded';
+      } else {
+        tryNextSource();
+      }
+    });
+    image.addEventListener('error', tryNextSource);
+    image.src = sources[0];
+  }
+
   function createSiteCard(site) {
     const card = template.content.firstElementChild.cloneNode(true);
     const link = card.querySelector('.card-link');
-    const avatar = card.querySelector('.site-avatar');
+    const placeholder = card.querySelector('.avatar-placeholder');
+    const favicon = card.querySelector('.site-favicon');
     const name = card.querySelector('.site-name');
     const description = card.querySelector('.site-description');
     const domain = card.querySelector('.site-domain');
@@ -84,10 +121,11 @@
     card.dataset.category = site.category;
     link.href = site.url;
     link.setAttribute('aria-label', `${site.name}：${site.description}（在新窗口打开）`);
-    avatar.textContent = site.name.trim().slice(0, 1).toUpperCase();
+    placeholder.textContent = site.name.trim().slice(0, 1).toUpperCase();
     name.textContent = site.name;
     description.textContent = site.description;
     domain.textContent = hostname;
+    loadFavicon(favicon, site);
     return card;
   }
 
