@@ -52,7 +52,7 @@ python3 -m http.server 8000
 
 图标建议持久化到 `assets/icons/`（以域名命名，如 `github.svg`），避免外链失效。
 
-站点顺序支持本地拖拽自定义（存于浏览器 localStorage）；在 sites.js 新增的站点会排在这些自定义顺序之后。
+站点顺序支持本地拖拽自定义（存于浏览器 localStorage）；在 sites.js 新增的站点会排在这些自定义顺序之后。页面每次加载都会强制回源拉取 sites.js（绕过缓存），推送后新站点无需等待缓存过期即可见。
 
 ## CI 校验
 

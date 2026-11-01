@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   'use strict';
 
   const RECENT_KEY = 'nav-recent-visits';
@@ -6,7 +6,19 @@
   const STAGGER_STEP_MS = 35;
   const STAGGER_MAX_INDEX = 11;
 
-  const sites = Array.isArray(window.NAV_SITES) ? window.NAV_SITES : [];
+  // 站点数据每次强制回源拉取(cache: reload),部署后新站点立即生效;
+  // index.html 里 script 标签预载的 window.NAV_SITES 仅作拉取失败时的兜底。
+  let sites = [];
+  try {
+    const fresh = await Promise.race([
+      fetch('./sites.js', { cache: 'reload' }).then((res) => res.text()),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('sites fetch timeout')), 3000)),
+    ]);
+    const parsed = new Function(`${fresh.replace(/^\uFEFF/, '')}\nreturn window.NAV_SITES;`)();
+    if (Array.isArray(parsed)) sites = parsed;
+  } catch (_) {
+    sites = Array.isArray(window.NAV_SITES) ? window.NAV_SITES : [];
+  }
   const categories = [
     { id: 'all', name: '全部' },
     { id: 'recent', name: '最近访问' },
