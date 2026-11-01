@@ -517,7 +517,8 @@
   /* ---------- 回到顶部 ---------- */
 
   function syncScrollState() {
-    backToTop.classList.toggle('is-visible', window.scrollY > 400);
+    // 阈值随视口高度走:固定值在小屏(横屏手机)要滚过一整屏才出现,大屏又永远够不到。
+    backToTop.classList.toggle('is-visible', window.scrollY > window.innerHeight * 0.6);
     // sticky 元素的 offsetTop 会随吸顶位置移动，不能作阈值；用 main 的文档位置（搜索条的自然位置）。
     controls.classList.toggle('is-stuck', window.scrollY >= mainEl.offsetTop);
   }
