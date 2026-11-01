@@ -407,22 +407,6 @@ svg {
   white-space: nowrap;
 }
 
-.external-icon {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-  color: var(--text-secondary);
-  opacity: 0;
-  transform: translate(-3px, 3px);
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.site-card:hover .external-icon,
-.card-link:focus-visible .external-icon {
-  opacity: 1;
-  transform: translate(0, 0);
-}
-
 .site-description {
   display: block;
   margin-top: 5px;
@@ -620,11 +604,6 @@ svg {
   .copy-button {
     right: 8px;
     bottom: 8px;
-    opacity: 0.7;
-    transform: none;
-  }
-
-  .external-icon {
     opacity: 0.7;
     transform: none;
   }
