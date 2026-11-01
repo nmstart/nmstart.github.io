@@ -1,4 +1,4 @@
-// 手动维护此列表即可。category 可选：dev、docs、ai、design、learn、productivity、discover。
+// 手动维护此列表即可。category 可选：dev、docs、ai、design、learn、productivity、discover、fun。
 // icon 指向本地持久化图标；新增网站时可省略，加载时会自动尝试在线获取并降级为首字符。
 window.NAV_SITES = [
   // 开发工具
@@ -46,4 +46,9 @@ window.NAV_SITES = [
   { name: 'HelloGitHub', url: 'https://hellogithub.com/', category: 'discover', description: '分享 GitHub 上有趣的开源项目月刊。', tags: ['开源', 'GitHub', '月刊'], icon: './assets/icons/hellogithub.com.svg' },
   { name: '开源中国', url: 'https://www.oschina.net/', category: 'discover', description: '开源技术社区与资讯门户。', tags: ['开源', '社区', '资讯'], icon: './assets/icons/www.oschina.net.png' },
   { name: '不死鸟', url: 'https://iui.su/', category: 'discover', description: '软件下载与优质资源分享博客。', tags: ['资源', '软件', '分享'], icon: './assets/icons/iui.su.png' },
+  { name: '摸鱼岛', url: 'https://yucoder.cn/index', category: 'discover', description: '程序员的摸鱼休闲聚合站。', tags: ['摸鱼', '休闲', '聚合'], icon: './assets/icons/yucoder.cn.png' },
+
+  // 娱乐
+  { name: '看剧AI', url: 'https://kanju25.com/', category: 'fun', description: '在线影视追剧播放站。', tags: ['影视', '追剧', '播放'], icon: './assets/icons/kanju25.com.png' },
+  { name: '飞鸟轻音', url: 'http://music.xn--q35am7h.site/', category: 'fun', description: '在线轻音乐播放站。', tags: ['音乐', '轻音乐', '播放'], icon: './assets/icons/music.xn--q35am7h.site.png' },
 ];

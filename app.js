@@ -17,6 +17,7 @@
     { id: 'learn', name: '学习成长' },
     { id: 'productivity', name: '效率工具' },
     { id: 'discover', name: '发现资讯' },
+    { id: 'fun', name: '娱乐' },
   ];
 
   const state = { query: '', category: 'all' };
