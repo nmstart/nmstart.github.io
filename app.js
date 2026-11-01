@@ -26,6 +26,7 @@
   const categoryList = document.querySelector('#category-list');
   const resultsCount = document.querySelector('#results-count');
   const clearButton = document.querySelector('#clear-button');
+  const clearRecent = document.querySelector('#clear-recent');
   const emptyState = document.querySelector('#empty-state');
   const emptyReset = document.querySelector('#empty-reset');
   const themeToggle = document.querySelector('#theme-toggle');
@@ -296,6 +297,7 @@
 
     const hasFilters = Boolean(query) || state.category !== 'all';
     clearButton.hidden = !hasFilters;
+    clearRecent.hidden = state.category !== 'recent';
     emptyState.hidden = filtered.length !== 0;
     grid.hidden = filtered.length === 0;
     updateCategoryButtons();
@@ -478,6 +480,18 @@
 
   clearButton.addEventListener('click', () => resetFilters({ focus: true }));
   emptyReset.addEventListener('click', () => resetFilters({ focus: true }));
+
+  clearRecent.addEventListener('click', () => {
+    try {
+      localStorage.removeItem(RECENT_KEY);
+    } catch (_) {
+      // 存储不可用时本次会话内仍视为已清除。
+    }
+    state.category = 'all';
+    syncUrl();
+    renderSites({ animate: true });
+    showToast('已清除最近访问记录');
+  });
 
   /* ---------- 回到顶部 ---------- */
 
