@@ -1,5 +1,18 @@
 # 本地工作区数据（WorkBuddy 记忆日志），不进入版本库
 .workbuddy/
 
+# ZCode 及工具插件的本地会话与运行时数据（会话计划、插件指针等）
+.zcode/
+.v2c/
+
+# 编辑器与 IDE
+.vscode/
+.idea/
+*.swp
+
 # 系统杂项
 .DS_Store
+Thumbs.db
+
+# 本地日志
+*.log
