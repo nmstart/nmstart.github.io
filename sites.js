@@ -5,6 +5,7 @@ window.NAV_SITES = [
   { name: 'GitHub', url: 'https://github.com/', category: 'dev', description: '代码托管、协作开发与开源项目社区。', tags: ['代码', '开源', 'Git'], icon: './assets/icons/github.svg' },
   { name: 'Vite', url: 'https://vite.dev/', category: 'dev', description: '快速、轻量的现代前端构建工具。', tags: ['构建', '前端', '工具'], icon: './assets/icons/vite.svg' },
   { name: 'Arthas', url: 'https://arthas.aliyun.com/', category: 'dev', description: '阿里开源的 Java 应用在线诊断工具。', tags: ['Java', '诊断', '开源'], icon: './assets/icons/arthas.aliyun.com.png' },
+  { name: '教育网联合镜像站', url: 'https://mirrors.cernet.edu.cn/', category: 'dev', description: 'Linux 发行版与开发依赖的开源镜像。', tags: ['镜像', 'Linux', 'PyPI'], icon: './assets/icons/mirrors.cernet.edu.cn.svg' },
 
   // 开发文档
   { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'docs', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
@@ -14,6 +15,7 @@ window.NAV_SITES = [
   { name: 'Hugging Face', url: 'https://huggingface.co/', category: 'ai', description: '机器学习模型、数据集与应用社区。', tags: ['模型', '数据集', '开源'], icon: './assets/icons/huggingface.svg' },
   { name: 'OpenChamber', url: 'https://openchamber.dev/zh/', category: 'ai', description: '在本地或服务器运行 AI 编程智能体的开发环境。', tags: ['AI', '智能体', '编程'], icon: './assets/icons/openchamber.dev.svg' },
   { name: 'InstaBox', url: 'https://instabox.sh/', category: 'ai', description: '为 AI 代理提供云端独立 Linux 虚拟机。', tags: ['AI', '虚拟机', '沙箱'], icon: './assets/icons/instabox.sh.svg' },
+  { name: 'Magpie', url: 'https://usemagpie.ai/zh/', category: 'ai', description: '本地 AI 网关，让任意 Agent 接入任意模型。', tags: ['AI', '网关', '模型'], icon: './assets/icons/usemagpie.ai.png' },
 
   // 设计资源
   { name: 'Figma', url: 'https://www.figma.com/', category: 'design', description: '在线界面设计与实时协作平台。', tags: ['UI', '原型', '协作'], icon: './assets/icons/figma.com.png' },
