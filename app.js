@@ -32,6 +32,7 @@
   const themeColor = document.querySelector('meta[name="theme-color"]');
   const backToTop = document.querySelector('#back-to-top');
   const toast = document.querySelector('#toast');
+  const searchShortcut = document.querySelector('#search-shortcut');
 
   document.querySelector('#current-year').textContent = new Date().getFullYear();
 
@@ -120,6 +121,7 @@
       });
       categoryList.append(button);
     });
+    categoryList.append(tabIndicator);
     updateCategoryButtons();
   }
 
@@ -134,7 +136,39 @@
       // 「最近访问」在没有记录时不占位。
       button.hidden = id === 'recent' && count === 0;
     });
+    syncIndicator();
   }
+
+  /* ---------- 分类下划线指示条 ---------- */
+
+  const tabIndicator = document.createElement('span');
+  tabIndicator.className = 'tab-indicator';
+  tabIndicator.setAttribute('aria-hidden', 'true');
+  let indicatorPositioned = false;
+
+  function syncIndicator() {
+    categoryList.classList.toggle('has-overflow', categoryList.scrollWidth > categoryList.clientWidth + 1);
+    const active = categoryList.querySelector('.category-button[aria-pressed="true"]:not([hidden])');
+    if (!active) {
+      tabIndicator.style.opacity = '0';
+      return;
+    }
+    // 首次对位不播放滑动动画，避免从 (0,0) 飞入。
+    if (!indicatorPositioned) {
+      tabIndicator.style.transition = 'none';
+    }
+    tabIndicator.style.opacity = '1';
+    tabIndicator.style.width = `${active.offsetWidth}px`;
+    tabIndicator.style.transform = `translateX(${active.offsetLeft}px)`;
+    if (!indicatorPositioned) {
+      void tabIndicator.offsetWidth;
+      tabIndicator.style.transition = '';
+      indicatorPositioned = true;
+    }
+  }
+
+  const categoryListObserver = new ResizeObserver(() => syncIndicator());
+  categoryListObserver.observe(categoryList);
 
   /* ---------- 筛选与渲染 ---------- */
 
@@ -336,6 +370,11 @@
 
   /* ---------- 搜索 ---------- */
 
+  const isApplePlatform = /Mac|iP(hone|ad|od)/.test(navigator.platform || '');
+  if (searchShortcut) {
+    searchShortcut.textContent = isApplePlatform ? '⌘K' : 'Ctrl K';
+  }
+
   function syncSearchClear() {
     searchClear.hidden = !searchInput.value;
   }
@@ -382,6 +421,13 @@
   }
 
   document.addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+      return;
+    }
+
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const target = event.target;
 
