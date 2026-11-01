@@ -257,6 +257,8 @@
 
     name.innerHTML = highlightText(site.name, query);
     description.innerHTML = highlightText(site.description, query);
+    // 描述被单行截断时，悬停可查看全文。
+    description.title = site.description;
 
     link.addEventListener('click', () => {
       pushRecent(site.url);
