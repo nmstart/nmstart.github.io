@@ -139,11 +139,7 @@ svg {
 .brand-mark {
   width: 36px;
   height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  background: var(--brand-gradient);
-  color: #ffffff;
+  border-radius: 50%;
   box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 28%, transparent);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
@@ -151,12 +147,6 @@ svg {
 .brand:hover .brand-mark {
   transform: scale(1.06);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.brand-mark svg {
-  width: 22px;
-  height: 22px;
-  stroke-width: 2;
 }
 
 .brand-name-sub {
