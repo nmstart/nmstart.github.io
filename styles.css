@@ -598,9 +598,17 @@ svg {
   outline-offset: 3px;
 }
 
-@media (max-width: 900px) {
+/* 断点按卡片可读宽度推算:横向卡片放全名称约需 230px 卡宽,
+   对应 4 列 ≥1000px、3 列 760-1000、2 列 520-760、手机单列。 */
+@media (max-width: 1000px) {
   .site-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .site-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -638,15 +646,6 @@ svg {
     font-size: 13px;
   }
 
-  .site-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .card-link {
-    padding: 14px;
-  }
-
   .copy-button {
     right: 8px;
     top: 8px;
@@ -658,6 +657,14 @@ svg {
     margin-top: 40px;
     flex-direction: column;
     gap: 8px;
+  }
+}
+
+/* 手机宽度降为单列:横向卡片有全宽可用,名称与描述不再被截成两三个字。 */
+@media (max-width: 520px) {
+  .site-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
   }
 }
 
