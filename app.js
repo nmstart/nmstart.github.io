@@ -11,6 +11,7 @@
     { id: 'all', name: '全部' },
     { id: 'recent', name: '最近访问' },
     { id: 'dev', name: '开发工具' },
+    { id: 'docs', name: '开发文档' },
     { id: 'ai', name: '人工智能' },
     { id: 'design', name: '设计资源' },
     { id: 'learn', name: '学习成长' },

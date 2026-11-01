@@ -44,7 +44,7 @@ python3 -m http.server 8000
 | --- | --- | --- |
 | `name` | 是 | 显示名称 |
 | `url` | 是 | 跳转地址，全表不可重复 |
-| `category` | 是 | `dev` / `ai` / `design` / `learn` / `productivity` / `discover` |
+| `category` | 是 | `dev` / `docs` / `ai` / `design` / `learn` / `productivity` / `discover` |
 | `description` | 是 | 一句话简介，参与搜索匹配 |
 | `tags` | 否 | 标签数组，参与搜索匹配 |
 | `icon` | 否 | 图标路径；省略时自动尝试目标站 favicon，失败降级为名称首字符 |

@@ -1,10 +1,12 @@
-// 手动维护此列表即可。category 可选：dev、ai、design、learn、productivity、discover。
+// 手动维护此列表即可。category 可选：dev、docs、ai、design、learn、productivity、discover。
 // icon 指向本地持久化图标；新增网站时可省略，加载时会自动尝试在线获取并降级为首字符。
 window.NAV_SITES = [
   // 开发工具
   { name: 'GitHub', url: 'https://github.com/', category: 'dev', description: '代码托管、协作开发与开源项目社区。', tags: ['代码', '开源', 'Git'], icon: './assets/icons/github.svg' },
-  { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'dev', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
   { name: 'Vite', url: 'https://vite.dev/', category: 'dev', description: '快速、轻量的现代前端构建工具。', tags: ['构建', '前端', '工具'], icon: './assets/icons/vite.svg' },
+
+  // 开发文档
+  { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/', category: 'docs', description: '权威、详尽的 Web 开发技术文档。', tags: ['前端', '文档', 'JavaScript'], icon: './assets/icons/developer.mozilla.org.png' },
 
   // 人工智能
   { name: 'DeepSeek', url: 'https://chat.deepseek.com/', category: 'ai', description: '支持推理、问答与编程的 AI 助手。', tags: ['推理', '编程', '国产'], icon: './assets/icons/deepseek.svg' },

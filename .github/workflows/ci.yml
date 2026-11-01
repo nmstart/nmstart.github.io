@@ -39,7 +39,7 @@ jobs:
             global.window = {};
             require("./sites.js");
             const sites = global.window.NAV_SITES;
-            const valid = new Set(["dev", "ai", "design", "learn", "productivity", "discover"]);
+            const valid = new Set(["dev", "docs", "ai", "design", "learn", "productivity", "discover"]);
             const urls = new Set();
             let fail = 0;
             for (const s of sites) {
