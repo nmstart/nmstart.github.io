@@ -14,6 +14,7 @@ window.NAV_SITES = [
 
   // 人工智能
   { name: 'DeepSeek', url: 'https://chat.deepseek.com/', category: 'ai', description: '支持推理、问答与编程的 AI 助手。', tags: ['推理', '编程', '国产'], icon: './assets/icons/deepseek.svg' },
+  { name: '豆包', url: 'https://www.doubao.com/', category: 'ai', description: '字节跳动的 AI 对话助手与创作工具。', tags: ['AI', '对话', '助手'], icon: './assets/icons/www.doubao.com.png' },
   { name: 'Hugging Face', url: 'https://huggingface.co/', category: 'ai', description: '机器学习模型、数据集与应用社区。', tags: ['模型', '数据集', '开源'], icon: './assets/icons/huggingface.svg' },
   { name: 'OpenChamber', url: 'https://openchamber.dev/zh/', category: 'ai', description: '在本地或服务器运行 AI 编程智能体的开发环境。', tags: ['AI', '智能体', '编程'], icon: './assets/icons/openchamber.dev.svg' },
   { name: 'InstaBox', url: 'https://instabox.sh/', category: 'ai', description: '为 AI 代理提供云端独立 Linux 虚拟机。', tags: ['AI', '虚拟机', '沙箱'], icon: './assets/icons/instabox.sh.svg' },
@@ -35,4 +36,5 @@ window.NAV_SITES = [
   { name: 'Product Hunt', url: 'https://www.producthunt.com/', category: 'discover', description: '发现每日新发布的互联网产品。', tags: ['产品', '新品', '创业'], icon: './assets/icons/producthunt.com.png' },
   { name: '阮一峰的网络日志', url: 'https://www.ruanyifeng.com/blog/', category: 'discover', description: '技术文章、科技动态与每周分享。', tags: ['博客', '技术', '周刊'], icon: './assets/icons/ruanyifeng.com.png' },
   { name: 'InfoQ', url: 'https://www.infoq.cn/', category: 'discover', description: '关注软件开发与技术实践的中文社区。', tags: ['技术', '架构', '资讯'], icon: './assets/icons/infoq.svg' },
+  { name: 'LINUX DO', url: 'https://linux.do/', category: 'discover', description: '新的理想型技术社区，开发与 AI 资源交流。', tags: ['社区', 'Linux', '技术'], icon: './assets/icons/linux.do.png' },
 ];
