@@ -144,11 +144,6 @@ svg {
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.brand:hover .brand-mark {
-  transform: scale(1.06);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
 .brand-name-sub {
   font-weight: 500;
   color: var(--text-secondary);
@@ -166,11 +161,6 @@ svg {
   color: var(--text-secondary);
   cursor: pointer;
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
-}
-
-.theme-toggle:hover {
-  border-color: var(--text-secondary);
-  color: var(--text);
 }
 
 .theme-toggle svg {
@@ -347,10 +337,6 @@ svg {
   right: 0;
 }
 
-.category-button:hover {
-  color: var(--text);
-}
-
 .category-button[aria-pressed="true"] {
   color: var(--accent);
   font-weight: 600;
@@ -386,10 +372,6 @@ svg {
   cursor: pointer;
 }
 
-.text-button:hover {
-  color: var(--accent-hover);
-}
-
 .site-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -405,12 +387,6 @@ svg {
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.02);
   cursor: pointer;
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.site-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  box-shadow: var(--shadow);
 }
 
 .site-card:focus-within {
@@ -493,8 +469,6 @@ svg {
   background: var(--surface);
   color: var(--text-secondary);
   cursor: pointer;
-  opacity: 0;
-  transform: translateY(2px);
   transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
 }
 
@@ -505,17 +479,11 @@ svg {
   inset: -8px;
 }
 
-.site-card:hover .copy-button,
+/* 键盘聚焦时始终亮出复制按钮(触屏无 hover,依赖此规则可达) */
 .site-card:focus-within .copy-button,
 .copy-button:focus-visible {
   opacity: 1;
   transform: translateY(0);
-}
-
-.copy-button:hover {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  background: var(--bg);
-  color: var(--text);
 }
 
 .copy-button svg {
@@ -526,19 +494,6 @@ svg {
 
 .check-icon {
   display: none;
-}
-
-.copy-button[data-copied="true"] {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  color: var(--accent);
-}
-
-.copy-button[data-copied="true"] .copy-icon {
-  display: none;
-}
-
-.copy-button[data-copied="true"] .check-icon {
-  display: block;
 }
 
 .empty-state {
@@ -589,10 +544,6 @@ svg {
 
 :root[data-theme="dark"] .primary-button {
   color: #101318;
-}
-
-.primary-button:hover {
-  background: var(--accent-hover);
 }
 
 .site-footer {
@@ -667,8 +618,6 @@ svg {
   .copy-button {
     right: 8px;
     top: 8px;
-    opacity: 0.7;
-    transform: none;
   }
 
   .site-footer {
@@ -779,11 +728,6 @@ mark {
   inset: -10px;
 }
 
-.search-clear:hover {
-  background: var(--surface);
-  color: var(--text);
-}
-
 .search-clear svg {
   width: 14px;
   height: 14px;
@@ -864,11 +808,6 @@ mark {
   transform: translateY(0);
 }
 
-.back-to-top:hover {
-  border-color: var(--text-secondary);
-  color: var(--text);
-}
-
 .back-to-top svg {
   width: 18px;
   height: 18px;
@@ -897,4 +836,77 @@ mark {
     right: 16px;
     bottom: 16px;
   }
+}
+
+/* ============ 悬停反馈(仅精确指针) ============ */
+/* 触屏设备没有 hover,悬停样式限定在鼠标环境,避免点击后状态残留;
+   复制按钮在触屏上因此常显,桌面端保留悬停浮现。 */
+@media (hover: hover) and (pointer: fine) {
+  .copy-button {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  .site-card:hover .copy-button {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .copy-button:hover {
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .site-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    box-shadow: var(--shadow);
+  }
+
+  .brand:hover .brand-mark {
+    transform: scale(1.06);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--text-secondary);
+    color: var(--text);
+  }
+
+  .category-button:hover {
+    color: var(--text);
+  }
+
+  .text-button:hover {
+    color: var(--accent-hover);
+  }
+
+  .search-clear:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .primary-button:hover {
+    background: var(--accent-hover);
+  }
+
+  .back-to-top:hover {
+    border-color: var(--text-secondary);
+    color: var(--text);
+  }
+}
+
+/* 复制成功的状态指示优先于悬停样式 */
+.copy-button[data-copied="true"] {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--accent);
+}
+
+.copy-button[data-copied="true"] .copy-icon {
+  display: none;
+}
+
+.copy-button[data-copied="true"] .check-icon {
+  display: block;
 }
