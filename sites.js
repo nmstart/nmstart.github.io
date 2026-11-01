@@ -31,6 +31,7 @@ window.NAV_SITES = [
 
   // 学习成长
   { name: 'MDN 学习区', url: 'https://developer.mozilla.org/zh-CN/docs/Learn', category: 'learn', description: '系统学习 HTML、CSS 与 JavaScript。', tags: ['前端', '教程', '入门'], icon: './assets/icons/developer.mozilla.org.png' },
+  { name: '高并发的哲学原理', url: 'https://pphc.lvwenhan.com/', category: 'learn', description: '免费开源的高并发架构设计在线书。', tags: ['架构', '高并发', '电子书'], icon: './assets/icons/pphc.lvwenhan.com.svg' },
 
   // 效率工具
   { name: '语雀', url: 'https://www.yuque.com/', category: 'productivity', description: '结构化知识创作与团队协同工具。', tags: ['知识库', '文档', '协作'], icon: './assets/icons/yuque.com.png' },
