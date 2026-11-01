@@ -71,61 +71,61 @@
     });
   }
 
-  function loadFavicon(image, site) {
-    const avatar = image.closest('.site-avatar');
-    const { hostname, origin } = new URL(site.url);
-    const sources = [
-      site.icon,
-      `${origin}/favicon.ico`,
-      `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`,
-    ].filter((source, index, list) => source && list.indexOf(source) === index);
-    let sourceIndex = 0;
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    document.body.append(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    textarea.remove();
+    if (!copied) throw new Error('copy failed');
+  }
 
-    const showFallback = () => {
-      avatar.dataset.state = 'error';
-      image.hidden = true;
-      image.removeAttribute('src');
-    };
-
-    const tryNextSource = () => {
-      sourceIndex += 1;
-      if (sourceIndex >= sources.length) {
-        showFallback();
-        return;
-      }
-      image.src = sources[sourceIndex];
-    };
-
-    image.addEventListener('load', () => {
-      const currentSource = sources[sourceIndex];
-      if (image.naturalWidth > 0 || currentSource.endsWith('.svg')) {
-        avatar.dataset.state = 'loaded';
-      } else {
-        tryNextSource();
+  function attachCopyButton(button, site) {
+    let copiedTimer;
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      try {
+        await copyText(site.url);
+        button.dataset.copied = 'true';
+        button.setAttribute('aria-label', '网址已复制');
+        button.title = '网址已复制';
+        clearTimeout(copiedTimer);
+        copiedTimer = setTimeout(() => {
+          delete button.dataset.copied;
+          button.setAttribute('aria-label', '复制网址');
+          button.title = '复制网址';
+        }, 1600);
+      } catch (_) {
+        button.title = '复制失败，请手动复制';
       }
     });
-    image.addEventListener('error', tryNextSource);
-    image.src = sources[0];
   }
 
   function createSiteCard(site) {
     const card = template.content.firstElementChild.cloneNode(true);
     const link = card.querySelector('.card-link');
-    const placeholder = card.querySelector('.avatar-placeholder');
     const favicon = card.querySelector('.site-favicon');
     const name = card.querySelector('.site-name');
     const description = card.querySelector('.site-description');
-    const domain = card.querySelector('.site-domain');
-    const hostname = new URL(site.url).hostname.replace(/^www\./, '');
+    const copyButton = card.querySelector('.copy-button');
 
     card.dataset.category = site.category;
     link.href = site.url;
     link.setAttribute('aria-label', `${site.name}：${site.description}（在新窗口打开）`);
-    placeholder.textContent = site.name.trim().slice(0, 1).toUpperCase();
+    favicon.src = site.icon || `${new URL(site.url).origin}/favicon.ico`;
     name.textContent = site.name;
     description.textContent = site.description;
-    domain.textContent = hostname;
-    loadFavicon(favicon, site);
+    attachCopyButton(copyButton, site);
     return card;
   }
 

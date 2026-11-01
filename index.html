@@ -72,9 +72,8 @@
     <template id="site-card-template">
       <article class="site-card">
         <a class="card-link" target="_blank" rel="noopener noreferrer">
-          <span class="site-avatar" data-state="loading" aria-hidden="true">
-            <span class="avatar-placeholder"></span>
-            <img class="site-favicon" alt="" width="28" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+          <span class="site-avatar" aria-hidden="true">
+            <img class="site-favicon" alt="" width="22" height="22" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
           </span>
           <span class="site-content">
             <span class="site-name-row">
@@ -82,9 +81,12 @@
               <svg class="external-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg>
             </span>
             <span class="site-description"></span>
-            <span class="site-domain"></span>
           </span>
         </a>
+        <button class="copy-button" type="button" aria-label="复制网址" title="复制网址">
+          <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="3" /><path d="M15 5H7a2 2 0 0 0-2 2v8" /></svg>
+          <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 5 5L20 6" /></svg>
+        </button>
       </article>
     </template>
   </body>
