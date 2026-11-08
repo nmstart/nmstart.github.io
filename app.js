@@ -907,7 +907,8 @@
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     backToTop.classList.toggle('is-visible', window.scrollY > Math.min(window.innerHeight * SCROLL_TOP_RATIO, maxScroll * SCROLL_TOP_RATIO));
     // sticky 元素的 offsetTop 会随吸顶位置移动，不能作阈值；用 main 的文档位置（搜索条的自然位置）。
-    controls.classList.toggle('is-stuck', window.scrollY >= mainEl.offsetTop);
+    // 头部并入搜索行后 main.offsetTop≈0,至少滚过 1px 才算吸顶,避免加载即 is-stuck。
+    controls.classList.toggle('is-stuck', window.scrollY >= Math.max(mainEl.offsetTop, 1));
   }
 
   window.addEventListener('scroll', syncScrollState, { passive: true });

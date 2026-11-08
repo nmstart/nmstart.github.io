@@ -136,16 +136,8 @@ svg {
   transform: translateY(0);
 }
 
-.site-header {
-  width: var(--container-w);
-  height: 72px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .brand {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -222,30 +214,7 @@ svg {
   gap: 12px;
 }
 
-/* 吸顶后出现的迷你品牌入口（JS 标记 is-stuck） */
-.controls-brand {
-  flex: 0 0 auto;
-  display: none;
-}
-
-.controls.is-stuck .controls-brand {
-  display: block;
-  animation: brand-in 200ms ease;
-}
-
-.controls-brand img {
-  display: block;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-}
-
-@keyframes brand-in {
-  from {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-}
+/* 品牌与主题切换并入搜索行:吸顶后整行常驻,不再需要迷你品牌入口 */
 
 .search-box {
   position: relative;
@@ -817,14 +786,9 @@ mark {
     --container-w: min(100% - 32px, 1120px);
   }
 
-  .site-header,
   .container,
   .site-footer {
     width: var(--container-w);
-  }
-
-  .site-header {
-    height: 64px;
   }
 
   .controls {
@@ -878,10 +842,6 @@ mark {
 
 /* 手机横握的矮视口:压缩纵向空间,保证首屏能看到首行卡片 */
 @media (max-height: 480px) and (orientation: landscape) {
-  .site-header {
-    height: 52px;
-  }
-
   .controls {
     padding-top: 8px;
   }

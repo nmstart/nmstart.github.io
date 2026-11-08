@@ -26,22 +26,12 @@
   <body>
     <a class="skip-link" href="#main">跳至主要内容</a>
 
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="起点导航首页">
-        <img class="brand-mark" src="./assets/icons/favicon.png" alt="" width="36" height="36" />
-        <span class="brand-name">起点<span class="brand-name-sub">导航</span></span>
-      </a>
-      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换深色模式">
-        <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></svg>
-        <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z" /></svg>
-      </button>
-    </header>
-
     <main id="main" class="container">
       <section class="controls" aria-label="网站搜索与筛选">
         <div class="search-row">
-          <a class="controls-brand" href="./" aria-label="起点导航首页">
-            <img src="./assets/icons/favicon.png" alt="" width="28" height="28" />
+          <a class="brand" href="./" aria-label="起点导航首页">
+            <img class="brand-mark" src="./assets/icons/favicon.png" alt="" width="36" height="36" />
+            <span class="brand-name">起点<span class="brand-name-sub">导航</span></span>
           </a>
           <div class="search-box">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
@@ -52,6 +42,10 @@
             </button>
             <kbd class="search-shortcut" id="search-shortcut" aria-hidden="true">/</kbd>
           </div>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换深色模式">
+            <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z" /></svg>
+          </button>
         </div>
         <nav class="category-list" id="category-list" aria-label="网站分类"></nav>
       </section>
