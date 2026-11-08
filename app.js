@@ -10,18 +10,25 @@
   // 借此让拟态的按压凹陷反馈在触屏上可靠生效(passive,不阻塞滚动)。
   document.addEventListener('touchstart', () => {}, { passive: true });
 
-  // 站点数据每次强制回源拉取(cache: reload),部署后新站点立即生效;
+  // 站点数据每次强制回源拉取(时间戳查询参数绕过 HTTP 缓存),部署后新站点立即生效;
   // index.html 里 script 标签预载的 window.NAV_SITES 仅作拉取失败时的兜底。
+  // 用动态 import 而非 fetch+eval:HTTP 错误页会因模块解析失败自然走兜底,
+  // 不存在误执行响应文本的风险,也无需为 CSP 放开 unsafe-eval。
+  const SITES_TIMEOUT_MS = 3000;
   let sites = [];
+  let timeoutId = 0;
   try {
     const fresh = await Promise.race([
-      fetch('./sites.js', { cache: 'reload' }).then((res) => res.text()),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('sites fetch timeout')), 3000)),
+      import(`./sites.js?ts=${Date.now()}`).then(() => window.NAV_SITES),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('sites fetch timeout')), SITES_TIMEOUT_MS);
+      }),
     ]);
-    const parsed = new Function(`${fresh.replace(/^\uFEFF/, '')}\nreturn window.NAV_SITES;`)();
-    if (Array.isArray(parsed)) sites = parsed;
+    if (Array.isArray(fresh)) sites = fresh;
   } catch (_) {
     sites = Array.isArray(window.NAV_SITES) ? window.NAV_SITES : [];
+  } finally {
+    clearTimeout(timeoutId);
   }
   // 业务分类以 sites.js 的 NAV_CATEGORIES 为单一事实来源(CI 校验数据引用的分类必须已定义);
   // all / recent 是 UI 层的虚拟分类,不进入数据文件。
