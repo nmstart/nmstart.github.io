@@ -170,9 +170,7 @@
 
       const name = document.createElement('span');
       name.textContent = category.name;
-      const countLabel = document.createElement('span');
-      countLabel.className = 'category-count';
-      button.append(name, countLabel);
+      button.append(name);
 
       button.addEventListener('click', () => {
         if (state.category === category.id) return;
@@ -192,9 +190,6 @@
       const id = button.dataset.category;
       const count = countForCategory(id);
       button.setAttribute('aria-pressed', String(id === state.category));
-      button.setAttribute('aria-label', `${categories.find((c) => c.id === id).name}，${count} 个网站`);
-      const countLabel = button.querySelector('.category-count');
-      if (countLabel) countLabel.textContent = count;
       // 「最近访问」在没有记录时不占位。
       button.hidden = id === 'recent' && count === 0;
     });
