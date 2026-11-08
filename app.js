@@ -3,6 +3,8 @@
 
   const RECENT_KEY = 'nav-recent-visits';
   const RECENT_LIMIT = 12;
+  const ORDER_KEY = 'nav-site-order';
+  const SEARCH_RENDER_DELAY_MS = 180;
   const STAGGER_STEP_MS = 35;
   const STAGGER_MAX_INDEX = 11;
 
@@ -122,51 +124,62 @@
     }, 1600);
   }
 
-  /* ---------- 最近访问 ---------- */
+  /* ---------- 本地存储(隐私模式降级 + 会话内缓存) ---------- */
 
-  function readRecent() {
-    try {
-      const raw = localStorage.getItem(RECENT_KEY);
-      const list = raw ? JSON.parse(raw) : [];
-      return Array.isArray(list) ? list.filter((item) => item && typeof item.url === 'string') : [];
-    } catch (_) {
-      return [];
+  // 一次渲染会多次读取同一份数据,解析结果按 key 缓存,写入/清除时同步失效,
+  // 避免每次渲染对 localStorage 做几十次 JSON.parse。
+  const storageCache = new Map();
+
+  function readStoredList(key, isValidItem) {
+    if (!storageCache.has(key)) {
+      let list = [];
+      try {
+        const raw = localStorage.getItem(key);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(parsed)) list = parsed.filter(isValidItem);
+      } catch (_) {
+        list = [];
+      }
+      storageCache.set(key, list);
     }
+    return storageCache.get(key);
   }
 
-  function pushRecent(url) {
+  function writeStoredList(key, list) {
     try {
-      const list = readRecent().filter((item) => item.url !== url);
-      list.unshift({ url, t: Date.now() });
-      localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_LIMIT)));
+      localStorage.setItem(key, JSON.stringify(list));
     } catch (_) {
-      // 存储不可用时静默降级：不影响本次访问记录之外的功能。
+      // 存储不可用时静默降级：记录仅在本会话内生效。
     }
+    storageCache.set(key, list);
+  }
+
+  function clearStoredList(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (_) {
+      // 存储不可用时视为已清除。
+    }
+    storageCache.delete(key);
+  }
+
+  /* ---------- 最近访问 ---------- */
+
+  const readRecent = () => readStoredList(RECENT_KEY, (item) => Boolean(item) && typeof item.url === 'string');
+
+  function pushRecent(url) {
+    const list = readRecent().filter((item) => item.url !== url);
+    list.unshift({ url, t: Date.now() });
+    writeStoredList(RECENT_KEY, list.slice(0, RECENT_LIMIT));
   }
 
   const recentUrlSet = () => new Set(readRecent().map((item) => item.url));
 
   /* ---------- 站点排序(本地持久化) ---------- */
 
-  const ORDER_KEY = 'nav-site-order';
+  const readOrder = () => readStoredList(ORDER_KEY, (item) => typeof item === 'string');
 
-  function readOrder() {
-    try {
-      const raw = localStorage.getItem(ORDER_KEY);
-      const list = raw ? JSON.parse(raw) : [];
-      return Array.isArray(list) ? list.filter((item) => typeof item === 'string') : [];
-    } catch (_) {
-      return [];
-    }
-  }
-
-  function writeOrder(list) {
-    try {
-      localStorage.setItem(ORDER_KEY, JSON.stringify(list));
-    } catch (_) {
-      // 存储不可用时静默降级:顺序仅在本会话内生效。
-    }
-  }
+  const writeOrder = (list) => writeStoredList(ORDER_KEY, list);
 
   // 把可见视图内 from→to 的移动映射回全局顺序:以目标位的可见项为锚点插入,
   // 夹在两者之间、未在本视图显示的站点保持原有邻接关系。
@@ -208,13 +221,10 @@
       button.addEventListener('click', () => {
         if (state.category === category.id) return;
         state.category = category.id;
-        updateCategoryButtons();
-        syncUrl();
-        renderSites({ animate: true });
+        dispatchState({ animate: true });
       });
       categoryList.append(button);
     });
-    categoryList.append(tabIndicator);
     updateCategoryButtons();
   }
 
@@ -405,10 +415,6 @@
   }
 
   function renderSites({ animate = false } = {}) {
-    // 最近访问记录被外部清空时，回退到「全部」。
-    if (state.category === 'recent' && readRecent().length === 0) {
-      state.category = 'all';
-    }
     const filtered = getFilteredSites();
     const query = state.query.trim();
     const fragment = document.createDocumentFragment();
@@ -424,9 +430,11 @@
     grid.dataset.animate = animate ? 'true' : 'false';
 
     const categoryName = categories.find((category) => category.id === state.category)?.name;
-    resultsCount.textContent = state.category === 'all'
+    const countText = state.category === 'all'
       ? `共 ${filtered.length} 个网站`
       : `${categoryName} · ${filtered.length} 个网站`;
+    // 内容未变不写入,避免 aria-live 区域被高频重播
+    if (resultsCount.textContent !== countText) resultsCount.textContent = countText;
 
     const hasFilters = Boolean(query) || state.category !== 'all';
     clearButton.hidden = !hasFilters;
@@ -436,7 +444,6 @@
     grid.hidden = filtered.length === 0;
     // 搜索子集与「最近访问」的顺序语义特殊,不允许拖拽;单卡片无可排。
     grid.classList.toggle('is-orderable', state.category !== 'recent' && !query && filtered.length > 1);
-    updateCategoryButtons();
   }
 
   /* ---------- URL 状态同步 ---------- */
@@ -461,11 +468,27 @@
     searchInput.value = state.query;
   }
 
+  /* ---------- 状态派发 ---------- */
+
+  // 所有可见状态变更的唯一出口：先归一化（最近记录被外部清空时回退「全部」），
+  // 再按固定顺序同步输入框、分类按钮、URL 与视图。
+  // 调用方只改 state,不再手工编排 syncSearchClear / updateCategoryButtons / syncUrl / renderSites 的调用序列。
+  // 输入框仅在值不一致时回写,不打断输入法组词过程。
+  function dispatchState({ animate = false, focusSearch = false } = {}) {
+    if (state.category === 'recent' && readRecent().length === 0) {
+      state.category = 'all';
+    }
+    if (searchInput.value !== state.query) searchInput.value = state.query;
+    syncSearchClear();
+    updateCategoryButtons();
+    syncUrl();
+    renderSites({ animate });
+    if (focusSearch) searchInput.focus();
+  }
+
   window.addEventListener('popstate', () => {
     readUrlState();
-    updateCategoryButtons();
-    syncSearchClear();
-    renderSites();
+    dispatchState();
   });
 
   /* ---------- 重置筛选 ---------- */
@@ -473,12 +496,7 @@
   function resetFilters({ focus = false, animate = true } = {}) {
     state.query = '';
     state.category = 'all';
-    searchInput.value = '';
-    syncSearchClear();
-    updateCategoryButtons();
-    syncUrl();
-    renderSites({ animate });
-    if (focus) searchInput.focus();
+    dispatchState({ animate, focusSearch: focus });
   }
 
   /* ---------- 主题 ---------- */
@@ -527,31 +545,35 @@
     searchClear.hidden = !searchInput.value;
   }
 
+  // 搜索输入防抖:每次击键都会全量重建网格,连续输入只在停顿后渲染;
+  // 清空关键词立即渲染,保证清除动作跟手。
+  let searchRenderTimer = 0;
+
   searchInput.addEventListener('input', (event) => {
     state.query = event.target.value;
     syncSearchClear();
     syncUrl();
-    renderSites();
+    clearTimeout(searchRenderTimer);
+    if (state.query.trim()) {
+      searchRenderTimer = setTimeout(() => renderSites(), SEARCH_RENDER_DELAY_MS);
+    } else {
+      renderSites();
+    }
   });
 
   searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && searchInput.value) {
       event.stopPropagation();
+      clearTimeout(searchRenderTimer);
       state.query = '';
-      searchInput.value = '';
-      syncSearchClear();
-      syncUrl();
-      renderSites();
+      dispatchState();
     }
   });
 
   searchClear.addEventListener('click', () => {
+    clearTimeout(searchRenderTimer);
     state.query = '';
-    searchInput.value = '';
-    syncSearchClear();
-    syncUrl();
-    renderSites();
-    searchInput.focus();
+    dispatchState({ focusSearch: true });
   });
 
   /* ---------- 快捷键与键盘网格导航 ---------- */
@@ -861,7 +883,7 @@
 
   resetOrder.addEventListener('click', () => {
     writeOrder([]);
-    renderSites({ animate: true });
+    dispatchState({ animate: true });
     showToast('已恢复默认排序');
   });
 
@@ -869,14 +891,9 @@
   emptyReset.addEventListener('click', () => resetFilters({ focus: true }));
 
   clearRecent.addEventListener('click', () => {
-    try {
-      localStorage.removeItem(RECENT_KEY);
-    } catch (_) {
-      // 存储不可用时本次会话内仍视为已清除。
-    }
+    clearStoredList(RECENT_KEY);
     state.category = 'all';
-    syncUrl();
-    renderSites({ animate: true });
+    dispatchState({ animate: true });
     showToast('已清除最近访问记录');
   });
 
@@ -911,8 +928,7 @@
 
   readUrlState();
   createCategoryButtons();
-  syncSearchClear();
-  renderSites({ animate: true });
+  dispatchState({ animate: true });
   updateTheme();
   syncScrollState();
 })();
