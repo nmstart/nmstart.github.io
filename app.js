@@ -56,11 +56,13 @@
   sites = normalizeSites(sites);
   // 业务分类以 sites.js 的 NAV_CATEGORIES 为单一事实来源(CI 校验数据引用的分类必须已定义);
   // all / recent 是 UI 层的虚拟分类,不进入数据文件。
+  // 组装时过滤缺 id/name 的坏项,数据文件被手改坏也不炸 UI。
   const virtualCategories = [
     { id: 'all', name: '全部' },
     { id: 'recent', name: '最近访问' },
   ];
-  const dataCategories = Array.isArray(window.NAV_CATEGORIES) ? window.NAV_CATEGORIES : [];
+  const dataCategories = (Array.isArray(window.NAV_CATEGORIES) ? window.NAV_CATEGORIES : [])
+    .filter((category) => category && typeof category.id === 'string' && category.id && typeof category.name === 'string');
   const categories = [...virtualCategories, ...dataCategories];
 
   const state = { query: '', category: 'all' };
@@ -900,8 +902,10 @@
   /* ---------- 回到顶部 ---------- */
 
   function syncScrollState() {
-    // 阈值随视口高度走:固定值在小屏(横屏手机)要滚过一整屏才出现,大屏又永远够不到。
-    backToTop.classList.toggle('is-visible', window.scrollY > window.innerHeight * SCROLL_TOP_RATIO);
+    // 阈值随视口高度走:固定值在小屏(横屏手机)要滚过一整屏才出现,大屏又永远够不到;
+    // 再与可滚动范围的 60% 取小,避免内容不足一屏时按钮永远够不到阈值。
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    backToTop.classList.toggle('is-visible', window.scrollY > Math.min(window.innerHeight * SCROLL_TOP_RATIO, maxScroll * SCROLL_TOP_RATIO));
     // sticky 元素的 offsetTop 会随吸顶位置移动，不能作阈值；用 main 的文档位置（搜索条的自然位置）。
     controls.classList.toggle('is-stuck', window.scrollY >= mainEl.offsetTop);
   }
