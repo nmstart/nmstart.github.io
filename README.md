@@ -12,8 +12,10 @@
 - **最近访问**：localStorage 记录最近 12 次访问，卡片角标提示，并提供独立分类视图
 - **自定义排序**：按住卡片拖到目标位置（触屏长按进入拖拽），顺序保存在本地；聚焦卡片后 `Alt+↑/↓` 微调，可一键恢复默认
 - **复制网址**：卡片右上角一键复制，Toast 轻提示反馈
-- **深浅色主题**：跟随系统偏好，可手动切换（View Transitions 平滑过渡），选择持久化
+- **深浅色主题**：跟随系统偏好（未手动选择时昼夜切换实时跟随），可手动切换（View Transitions 平滑过渡），选择持久化
 - **键盘友好**：方向键在卡片网格间移动焦点，回车直接打开
+- **PWA**：Service Worker 离线缓存，支持「添加到主屏幕」全屏使用；部署后在线访问始终拿到最新内容
+- **多标签页同步**：最近访问、排序与主题在其他标签页改动后实时同步
 - **细节**：回到顶部、空状态引导、焦点样式、`prefers-reduced-motion` 降级
 
 ## 快速开始
@@ -34,6 +36,8 @@ python3 -m http.server 8000
 ├── styles.css            # 全部样式（设计令牌集中在 :root）
 ├── app.js                # 渲染与交互逻辑（无第三方依赖）
 ├── sites.js              # 站点与分类数据（单一事实来源，手动维护，见下）
+├── sw.js                 # Service Worker（离线缓存策略；改版时递增 CACHE_NAME）
+├── manifest.json         # PWA 清单
 ├── assets/icons/         # 站点图标 + favicon.png
 └── .github/workflows/    # CI 校验
 ```
@@ -61,8 +65,8 @@ python3 -m http.server 8000
 
 推送到任意分支或提交 PR 时，GitHub Actions 自动执行四项检查（见 [.github/workflows/ci.yml](.github/workflows/ci.yml)）：
 
-1. **JS 语法检查** —— `theme.js`、`app.js`、`sites.js`
-2. **静态资源引用完整性** —— `index.html` 的脚本/样式引用；`sites.js` 中每个 `icon` 路径对应的文件必须存在，未引用的孤儿图标给出提示
+1. **JS 语法检查** —— `theme.js`、`app.js`、`sites.js`、`sw.js`
+2. **静态资源引用完整性** —— `index.html` 的脚本/样式引用；PWA 清单可解析且图标存在；`sites.js` 中每个 `icon` 路径对应的文件必须存在，未引用的孤儿图标给出提示
 3. **数据卫生检查** —— 分类定义合法且 id 唯一；站点记录字段非空、`category` 必须是已定义分类、URL 仅允许 http/https 且不重复、`tags` 须为数组
 4. **空白字符检查** —— 对比 PR 基线（或 push 前一提交），不允许引入行尾空白
 

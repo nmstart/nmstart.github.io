@@ -1,0 +1,19 @@
+{
+  "name": "起点导航 · 个人常用网站集合",
+  "short_name": "起点导航",
+  "description": "收录个人常用的开发、AI、设计与效率工具，让常用网站一触即达。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f0f3f7",
+  "theme_color": "#f0f3f7",
+  "icons": [
+    {
+      "src": "./assets/icons/favicon.png",
+      "sizes": "320x320",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

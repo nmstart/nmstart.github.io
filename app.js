@@ -970,6 +970,13 @@
   window.addEventListener('error', showErrorState);
   window.addEventListener('unhandledrejection', showErrorState);
 
+  /* ---------- PWA ---------- */
+
+  // 注册 Service Worker(离线缓存/添加到主屏);失败场景(file://、受限环境)静默降级为在线使用
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
   /* ---------- 启动 ---------- */
 
   readUrlState();
