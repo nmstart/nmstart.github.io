@@ -83,6 +83,7 @@ input {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 button {
@@ -818,6 +819,14 @@ mark {
 
 /* 手机端覆盖统一收拢于此,且位于全部基准规则之后,保证同优先级覆盖生效 */
 @media (max-width: 600px) {
+  /* 小屏收敛拟态阴影:凹凸更精细,绘制成本更低;亮暗主题自动继承(--neu-dark/light 不变) */
+  :root {
+    --neu-raised: 4px 4px 9px var(--neu-dark), -4px -4px 9px var(--neu-light);
+    --neu-raised-lg: 6px 6px 13px var(--neu-dark), -6px -6px 13px var(--neu-light);
+    --neu-raised-sm: 2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light);
+    --neu-inset: inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light);
+  }
+
   .site-header,
   .container,
   .site-footer {
@@ -873,6 +882,29 @@ mark {
   .back-to-top {
     right: calc(16px + env(safe-area-inset-right));
     bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+/* 手机横握的矮视口:压缩纵向空间,保证首屏能看到首行卡片 */
+@media (max-height: 480px) and (orientation: landscape) {
+  .site-header {
+    height: 52px;
+  }
+
+  .controls {
+    padding-top: 8px;
+  }
+
+  .search-box input {
+    height: 44px;
+  }
+
+  .category-list {
+    margin-top: 8px;
+  }
+
+  .empty-state {
+    padding: 32px 24px;
   }
 }
 
