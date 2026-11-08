@@ -6,6 +6,10 @@
   const STAGGER_STEP_MS = 35;
   const STAGGER_MAX_INDEX = 11;
 
+  // 注册一次空 touchstart:iOS Safari 只有存在 touch 监听器时才启用 :active 按压态,
+  // 借此让拟态的按压凹陷反馈在触屏上可靠生效(passive,不阻塞滚动)。
+  document.addEventListener('touchstart', () => {}, { passive: true });
+
   // 站点数据每次强制回源拉取(cache: reload),部署后新站点立即生效;
   // index.html 里 script 标签预载的 window.NAV_SITES 仅作拉取失败时的兜底。
   let sites = [];
