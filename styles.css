@@ -326,20 +326,6 @@ svg {
   -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
 }
 
-.tab-indicator {
-  /* 拟态下激活分类改为凸起药丸,禁用滑动下划线(JS 定位隐藏元素无副作用) */
-  display: none;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: var(--brand-gradient);
-  pointer-events: none;
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), width 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
-}
-
 .category-button {
   position: relative;
   flex: 0 0 auto;

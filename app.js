@@ -236,40 +236,19 @@
       // 「最近访问」在没有记录时不占位。
       button.hidden = id === 'recent' && count === 0;
     });
-    syncIndicator();
+    syncCategoryOverflow();
     scrollActiveTabIntoView();
   }
 
-  /* ---------- 分类下划线指示条 ---------- */
+  /* ---------- 分类横向滚动 ---------- */
 
-  const tabIndicator = document.createElement('span');
-  tabIndicator.className = 'tab-indicator';
-  tabIndicator.setAttribute('aria-hidden', 'true');
-  let indicatorPositioned = false;
-
-  function syncIndicator() {
+  // 分类溢出时右缘渐隐提示(CSS has-overflow);宽度变化(旋转屏幕)后同步一次。
+  function syncCategoryOverflow() {
     categoryList.classList.toggle('has-overflow', categoryList.scrollWidth > categoryList.clientWidth + 1);
-    const active = categoryList.querySelector('.category-button[aria-pressed="true"]:not([hidden])');
-    if (!active) {
-      tabIndicator.style.opacity = '0';
-      return;
-    }
-    // 首次对位不播放滑动动画，避免从 (0,0) 飞入。
-    if (!indicatorPositioned) {
-      tabIndicator.style.transition = 'none';
-    }
-    tabIndicator.style.opacity = '1';
-    tabIndicator.style.width = `${active.offsetWidth}px`;
-    tabIndicator.style.transform = `translateX(${active.offsetLeft}px)`;
-    if (!indicatorPositioned) {
-      void tabIndicator.offsetWidth;
-      tabIndicator.style.transition = '';
-      indicatorPositioned = true;
-    }
   }
 
   const categoryListObserver = new ResizeObserver(() => {
-    syncIndicator();
+    syncCategoryOverflow();
     // 旋转屏幕等宽度变化后,选中的分类可能被挤出可视区。
     scrollActiveTabIntoView();
   });
