@@ -466,6 +466,8 @@
     if (state.category === 'recent' && readRecent().length === 0) {
       state.category = 'all';
     }
+    // 一次成功的状态派发说明应用仍活着,收回此前意外亮出的错误态
+    errorState.hidden = true;
     if (searchInput.value !== state.query) searchInput.value = state.query;
     syncSearchClear();
     updateCategoryButtons();
@@ -574,8 +576,10 @@
 
   function getGridColumns(links) {
     if (links.length < 2) return links.length || 1;
-    const firstTop = links[0].offsetTop;
-    return Math.max(1, links.filter((link) => link.offsetTop === firstTop).length);
+    // 用视口坐标而非 offsetTop:卡片的 offsetParent 是 position:relative 的卡片自身,
+    // 链接的 offsetTop 恒为 0,会把列数误算成总数
+    const firstTop = Math.round(links[0].getBoundingClientRect().top);
+    return Math.max(1, links.filter((link) => Math.round(link.getBoundingClientRect().top) === firstTop).length);
   }
 
   // 聚焦搜索类快捷键:⌘K / Ctrl K 与 /
