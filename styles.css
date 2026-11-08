@@ -2,12 +2,16 @@
 
 :root {
   color-scheme: light;
+  /* 内容列宽:头部/主容器/页脚共用,手机端在 600px 断点只改这一个变量 */
+  --container-w: min(1120px, calc(100% - 48px));
   --bg: #f0f3f7;
   --surface: #f0f3f7; /* 拟态前提:表面与背景同色,阴影才能无缝融合 */
   --surface-raised: #f0f3f7; /* 拟态下与背景同色 */
   --text: #182230;
-  --text-secondary: #667085;
+  /* 次级文字对 --bg 的对比度需 ≥ 4.5:1(WCAG AA),#5c6a80 ≈ 4.93:1 */
+  --text-secondary: #5c6a80;
   --border: #e4e7ec;
+  --border-soft: color-mix(in srgb, var(--border) 30%, transparent);
   --accent: #5b64f0;
   --accent-hover: #4952e4;
   --accent-soft: #eef0fe; /* 预留:软强调背景,当前未使用 */
@@ -37,13 +41,10 @@
   --brand-gradient: linear-gradient(135deg, #5d86f7, #9a70f7);
   --control: rgba(29, 34, 43, 0.86);
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-  /* 轻拟态双阴影:微弱高光 + 深色投影,在暗色上拉开凹凸 */
+  /* 轻拟态双阴影:微弱高光 + 深色投影,在暗色上拉开凹凸。
+     几何参数与亮色完全一致,只需覆盖两个原子色,派生阴影令牌自动继承。 */
   --neu-light: rgba(255, 255, 255, 0.05);
   --neu-dark: rgba(0, 0, 0, 0.55);
-  --neu-raised: 5px 5px 12px var(--neu-dark), -5px -5px 12px var(--neu-light);
-  --neu-raised-lg: 8px 8px 18px var(--neu-dark), -8px -8px 18px var(--neu-light);
-  --neu-raised-sm: 3px 3px 7px var(--neu-dark), -3px -3px 7px var(--neu-light);
-  --neu-inset: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
 }
 
 * {
@@ -136,7 +137,7 @@ svg {
 }
 
 .site-header {
-  width: min(1120px, calc(100% - 48px));
+  width: var(--container-w);
   height: 72px;
   margin: 0 auto;
   display: flex;
@@ -196,7 +197,7 @@ svg {
 }
 
 .container {
-  width: min(1120px, calc(100% - 48px));
+  width: var(--container-w);
   margin: 0 auto;
 }
 
@@ -266,7 +267,7 @@ svg {
   width: 100%;
   height: 52px;
   padding: 0 52px 0 48px;
-  border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+  border: 1px solid var(--border-soft);
   border-radius: 14px;
   outline: none;
   background: var(--surface);
@@ -278,6 +279,12 @@ svg {
 
 .search-box input::placeholder {
   color: var(--text-secondary);
+}
+
+/* 隐藏 WebKit 原生搜索清除按钮,避免与自定义 .search-clear 双 X 并存 */
+.search-box input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .search-box input:focus {
@@ -418,7 +425,7 @@ svg {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
   background: var(--surface);
   box-shadow: var(--neu-inset);
@@ -561,7 +568,7 @@ svg {
 }
 
 .site-footer {
-  width: min(1120px, calc(100% - 48px));
+  width: var(--container-w);
   display: flex;
   justify-content: space-between;
   gap: 16px;
@@ -804,12 +811,13 @@ mark {
     --neu-raised-lg: 6px 6px 13px var(--neu-dark), -6px -6px 13px var(--neu-light);
     --neu-raised-sm: 2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light);
     --neu-inset: inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light);
+    --container-w: min(100% - 32px, 1120px);
   }
 
   .site-header,
   .container,
   .site-footer {
-    width: min(100% - 32px, 1120px);
+    width: var(--container-w);
   }
 
   .site-header {
