@@ -30,6 +30,23 @@
   } finally {
     clearTimeout(timeoutId);
   }
+
+  // 数据容错:剔除无 URL 的记录,缺省字段补安全默认值,
+  // 保证单条坏数据只降级自己,不会中断整批渲染。
+  function normalizeSites(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((site) => site && typeof site.url === 'string' && site.url)
+      .map((site) => ({
+        ...site,
+        name: typeof site.name === 'string' ? site.name : '',
+        description: typeof site.description === 'string' ? site.description : '',
+        tags: Array.isArray(site.tags) ? site.tags.filter((tag) => typeof tag === 'string') : [],
+        icon: typeof site.icon === 'string' ? site.icon : '',
+      }));
+  }
+
+  sites = normalizeSites(sites);
   // 业务分类以 sites.js 的 NAV_CATEGORIES 为单一事实来源(CI 校验数据引用的分类必须已定义);
   // all / recent 是 UI 层的虚拟分类,不进入数据文件。
   const virtualCategories = [
@@ -58,6 +75,7 @@
   const toast = document.querySelector('#toast');
   const searchShortcut = document.querySelector('#search-shortcut');
   const resetOrder = document.querySelector('#reset-order');
+  const errorState = document.querySelector('#error-state');
 
   document.querySelector('#current-year').textContent = new Date().getFullYear();
 
@@ -69,12 +87,24 @@
     return String(value).replace(/[&<>"']/g, (ch) => ESCAPE_MAP[ch]);
   }
 
+  // 在原始文本上命中关键词,再对切分出的片段逐一转义拼接:
+  // 若先转义再匹配,搜索 amp/lt 等词会命中 &amp; 这类实体内部,把转义串拆花。
   function highlightText(text, query) {
-    const safe = escapeHtml(text);
+    const raw = String(text);
     const keyword = query.trim();
-    if (!keyword) return safe;
+    if (!keyword) return escapeHtml(raw);
     const pattern = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return safe.replace(new RegExp(pattern, 'gi'), (match) => `<mark>${match}</mark>`);
+    const regex = new RegExp(pattern, 'gi');
+    const parts = [];
+    let last = 0;
+    let match;
+    while ((match = regex.exec(raw))) {
+      parts.push(escapeHtml(raw.slice(last, match.index)), '<mark>', escapeHtml(match[0]), '</mark>');
+      last = match.index + match[0].length;
+      if (match[0].length === 0) regex.lastIndex += 1; // 防御空匹配导致的死循环
+    }
+    parts.push(escapeHtml(raw.slice(last)));
+    return parts.join('');
   }
 
   function showToast(message) {
@@ -317,6 +347,10 @@
     });
   }
 
+  // 会话内记住自动 favicon 拉取失败的站点,避免每次渲染对同一地址重发必败请求
+  // (本地 icon 由 CI 保证存在,不在此列)。
+  const brokenAutoIcons = new Set();
+
   function createSiteCard(site, query) {
     const card = template.content.firstElementChild.cloneNode(true);
     const link = card.querySelector('.card-link');
@@ -327,16 +361,29 @@
     const description = card.querySelector('.site-description');
     const copyButton = card.querySelector('.copy-button');
 
+    // URL 格式非法时不让 new URL 抛错中断渲染,只放弃自动 favicon。
+    let iconOrigin = '';
+    try {
+      iconOrigin = new URL(site.url).origin;
+    } catch (_) { /* 坏 URL:链接按原文输出,头像降级为首字符 */ }
+
     card.dataset.category = site.category;
     card.dataset.url = site.url;
     link.href = site.url;
-    link.setAttribute('aria-label', `${site.name}：${site.description}（在新窗口打开）`);
+    link.setAttribute('aria-label', `${site.name || site.url}：${site.description}（在新窗口打开）`);
 
     fallback.textContent = site.name.trim().slice(0, 1) || '?';
     favicon.addEventListener('error', () => {
+      if (!site.icon && iconOrigin) brokenAutoIcons.add(iconOrigin);
       avatar.dataset.fallback = 'true';
     });
-    favicon.src = site.icon || `${new URL(site.url).origin}/favicon.ico`;
+    if (site.icon) {
+      favicon.src = site.icon;
+    } else if (iconOrigin && !brokenAutoIcons.has(iconOrigin)) {
+      favicon.src = `${iconOrigin}/favicon.ico`;
+    } else {
+      avatar.dataset.fallback = 'true';
+    }
 
     if (recentUrlSet().has(site.url)) {
       avatar.dataset.recent = 'true';
@@ -846,6 +893,19 @@
   backToTop.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+
+  /* ---------- 全局错误兜底 ---------- */
+
+  // 渲染链路意外抛错时给出可见提示,避免静默白屏(noscript 只覆盖无 JS 场景)。
+  // 资源加载失败(error 不冒泡到 window)与已捕获的 Promise 不经过这里。
+  function showErrorState() {
+    if (!errorState.hidden) return;
+    grid.hidden = true;
+    emptyState.hidden = true;
+    errorState.hidden = false;
+  }
+  window.addEventListener('error', showErrorState);
+  window.addEventListener('unhandledrejection', showErrorState);
 
   /* ---------- 启动 ---------- */
 

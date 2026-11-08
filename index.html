@@ -76,7 +76,7 @@
       </noscript>
 
       <div class="results-meta">
-        <p id="results-count" role="status" aria-live="polite">共 14 个网站</p>
+        <p id="results-count" role="status" aria-live="polite">正在加载网站…</p>
         <button id="clear-recent" class="text-button" type="button" hidden>清除记录</button>
         <button id="clear-button" class="text-button" type="button" hidden>清除筛选</button>
         <button id="reset-order" class="text-button" type="button" hidden>恢复默认排序</button>
@@ -91,6 +91,14 @@
         <h2>没有找到匹配的网站</h2>
         <p>试试其他关键词，或查看全部网站。</p>
         <button id="empty-reset" class="primary-button" type="button">查看全部网站</button>
+      </section>
+
+      <section id="error-state" class="empty-state" hidden>
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 8v5m0 3.5v.5" /></svg>
+        </div>
+        <h2>页面加载出了问题</h2>
+        <p>渲染网站列表时发生错误，请刷新重试。</p>
       </section>
     </main>
 
