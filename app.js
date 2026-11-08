@@ -66,6 +66,8 @@
   const categories = [...virtualCategories, ...dataCategories];
 
   const state = { query: '', category: 'all' };
+  // 生效分类:搜索时跨全部分类(分类是浏览过滤器,搜索优先),清空搜索后回到原分类
+  const effectiveCategory = () => (state.query.trim() ? 'all' : state.category);
   const grid = document.querySelector('#site-grid');
   const template = document.querySelector('#site-card-template');
   const searchInput = document.querySelector('#search-input');
@@ -236,10 +238,11 @@
   }
 
   function updateCategoryButtons() {
+    const active = effectiveCategory();
     categoryList.querySelectorAll('.category-button').forEach((button) => {
       const id = button.dataset.category;
       const count = countForCategory(id);
-      button.setAttribute('aria-pressed', String(id === state.category));
+      button.setAttribute('aria-pressed', String(id === active));
       // 「最近访问」在没有记录时不占位。
       button.hidden = id === 'recent' && count === 0;
     });
@@ -281,11 +284,13 @@
     const query = state.query.trim().toLocaleLowerCase();
     let list = sites;
 
-    if (state.category === 'recent') {
-      const rank = new Map(readRecent().map((item, index) => [item.url, index]));
-      list = sites.filter((site) => rank.has(site.url)).sort((a, b) => rank.get(a.url) - rank.get(b.url));
-    } else if (state.category !== 'all') {
-      list = sites.filter((site) => site.category === state.category);
+    if (!query) {
+      if (state.category === 'recent') {
+        const rank = new Map(readRecent().map((item, index) => [item.url, index]));
+        list = sites.filter((site) => rank.has(site.url)).sort((a, b) => rank.get(a.url) - rank.get(b.url));
+      } else if (state.category !== 'all') {
+        list = sites.filter((site) => site.category === state.category);
+      }
     }
 
     // 自定义顺序作用于除「最近访问」外的全部视图;未登记的站点按原表相对顺序殿后。
@@ -415,8 +420,8 @@
     grid.replaceChildren(fragment);
     grid.dataset.animate = animate ? 'true' : 'false';
 
-    const categoryName = categories.find((category) => category.id === state.category)?.name;
-    const countText = state.category === 'all'
+    const categoryName = categories.find((category) => category.id === effectiveCategory())?.name;
+    const countText = effectiveCategory() === 'all'
       ? `共 ${filtered.length} 个网站`
       : `${categoryName} · ${filtered.length} 个网站`;
     // 内容未变不写入,避免 aria-live 区域被高频重播
@@ -424,8 +429,8 @@
 
     const hasFilters = Boolean(query) || state.category !== 'all';
     clearButton.hidden = !hasFilters;
-    clearRecent.hidden = state.category !== 'recent';
-    resetOrder.hidden = state.category === 'recent' || readOrder().length === 0;
+    clearRecent.hidden = effectiveCategory() !== 'recent';
+    resetOrder.hidden = effectiveCategory() === 'recent' || readOrder().length === 0;
     emptyState.hidden = filtered.length !== 0;
     grid.hidden = filtered.length === 0;
     // 搜索子集与「最近访问」的顺序语义特殊,不允许拖拽;单卡片无可排。
@@ -443,7 +448,8 @@
   function syncUrl(mode = 'replace') {
     const params = new URLSearchParams();
     if (state.query.trim()) params.set('q', state.query.trim());
-    if (state.category !== 'all') params.set('cat', state.category);
+    // 搜索时分类不参与过滤,URL 也不带 cat,清空搜索后原分类自动恢复
+    if (effectiveCategory() !== 'all') params.set('cat', effectiveCategory());
     const search = params.toString();
     const url = search ? `${location.pathname}?${search}${location.hash}` : `${location.pathname}${location.hash}`;
     // 状态未变不写历史,避免 resetOrder 这类无 URL 语义的操作塞入重复记录
@@ -586,6 +592,17 @@
     // 输入法组词过程中不渲染,词组确认后的最终 input 事件(isComposing=false)才过滤,
     // 避免拼音每敲一个字母就全量重建一次网格
     if (event.isComposing) return;
+    if (state.query.trim()) {
+      searchRenderTimer = setTimeout(() => dispatchState(), SEARCH_RENDER_DELAY_MS);
+    } else {
+      dispatchState();
+    }
+  });
+
+  // 组词提交兜底:WebKit(Safari/IOS)确认词组时的最后一次 input 事件 isComposing 仍为 true,
+  // 会被上面的守卫跳过且不再有其他触发路径,这里补上过滤(Chrome 等会先到 input(false),clearTimeout 去重)
+  searchInput.addEventListener('compositionend', () => {
+    clearTimeout(searchRenderTimer);
     if (state.query.trim()) {
       searchRenderTimer = setTimeout(() => dispatchState(), SEARCH_RENDER_DELAY_MS);
     } else {
