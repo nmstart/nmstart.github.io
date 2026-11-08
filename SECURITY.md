@@ -1,21 +1,17 @@
 # Security Policy
 
-## Supported Versions
+## 支持版本
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+本项目为个人静态站点，无版本发布流程：仅最新的 `main` 分支获得安全修复。
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## 报告漏洞
 
-## Reporting a Vulnerability
+请通过 GitHub 的「私下报告安全漏洞」（Private vulnerability reporting）功能提交，或在 Issue 中注明仅为非敏感问题。
 
-Use this section to tell people how to report a vulnerability.
+本项目为纯静态站点（无后端、无用户数据上报、无第三方依赖），重点关注面：
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+- XSS 注入（`sites.js` 数据进入 DOM 的路径）
+- 仓库与 GitHub Pages 部署配置
+- 供应链（当前无第三方包，若未来引入请同步评估）
+
+收到报告后一般会在一周内回应；确认后将在 `main` 修复并发布。
