@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,7 +11,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
+      # 拉全量历史,供空白字符检查对比 PR base / push 前一提交
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: JS 语法检查
         run: |
@@ -31,6 +34,9 @@ jobs:
             if (!icons.length) { console.error("sites.js 中未找到 icon 字段"); process.exit(1); }
             const missing = icons.filter((p) => !fs.existsSync(p));
             if (missing.length) { console.error("缺失图标文件:", missing.join(", ")); process.exit(1); }
+            const referenced = new Set(icons.concat(["./assets/icons/favicon.png"]));
+            const orphans = fs.readdirSync("assets/icons").filter((f) => !referenced.has("./assets/icons/" + f));
+            if (orphans.length) console.warn("未被引用的图标(仅提示):", orphans.join(", "));
             console.log("icon 引用完整:", icons.length, "个");
           '
 
@@ -46,12 +52,25 @@ jobs:
             // 分类白名单以数据文件的 NAV_CATEGORIES 为单一事实来源,不再与 app.js 双份维护
             const valid = new Set(categories.map((c) => c.id));
             if (valid.size !== categories.length) { console.error("分类 id 存在重复"); process.exit(1); }
+            for (const c of categories) {
+              if (!c || typeof c.id !== "string" || !c.id || typeof c.name !== "string" || !c.name) {
+                console.error("分类定义不合法:", JSON.stringify(c)); process.exit(1);
+              }
+            }
             const urls = new Set();
             let fail = 0;
             for (const s of sites) {
-              if (!s.name || !s.url || !s.description || !valid.has(s.category)) {
-                console.error("记录字段不合法:", s.name);
-                fail = 1;
+              if (!s || typeof s.name !== "string" || !s.name.trim()
+                || typeof s.url !== "string" || !s.url.trim()
+                || typeof s.description !== "string" || !s.description.trim()) {
+                console.error("记录字段不合法:", s && s.name); fail = 1;
+              } else if (!valid.has(s.category)) {
+                console.error("未知分类:", s.name, "→", s.category); fail = 1;
+              } else if (!/^https?:\/\//i.test(s.url)) {
+                // 只放行 http/https,拦截 javascript: 等协议进入 href
+                console.error("URL 协议须为 http/https:", s.url); fail = 1;
+              } else if (s.tags !== undefined && !Array.isArray(s.tags)) {
+                console.error("tags 须为数组:", s.name); fail = 1;
               }
               if (urls.has(s.url)) { console.error("URL 重复:", s.url); fail = 1; }
               urls.add(s.url);
@@ -60,5 +79,13 @@ jobs:
             console.log("站点数据通过:", sites.length, "条,", valid.size, "个分类");
           '
 
+      # push 事件对比前一提交,PR 事件对比目标分支;新分支首个提交无前序点则跳过
       - name: 空白字符检查
-        run: git diff --check HEAD
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}" HEAD
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            git diff --check "${{ github.event.before }}" HEAD
+          else
+            echo "无前序提交可对比,跳过"
+          fi
