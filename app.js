@@ -437,7 +437,7 @@
   function updateTheme() {
     const isDark = document.documentElement.dataset.theme === 'dark';
     themeToggle.setAttribute('aria-label', isDark ? '切换浅色模式' : '切换深色模式');
-    themeColor.content = isDark ? '#101318' : '#f6f7f9';
+    themeColor.content = isDark ? '#1d222b' : '#f0f3f7';
   }
 
   function applyTheme(theme) {
