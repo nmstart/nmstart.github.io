@@ -319,7 +319,10 @@ svg {
   position: relative;
   display: flex;
   gap: 8px;
-  margin-top: 14px;
+  /* 出血位:滚动容器(overflow-x:auto)会连带裁切纵向,激活药丸的拟态阴影
+     需要约 10px 外溢空间;用负外边距补偿,视觉间距与裁切前保持一致 */
+  padding: 12px 14px;
+  margin: 2px -14px -12px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -842,7 +845,8 @@ mark {
   }
 
   .category-list {
-    margin-top: 10px;
+    /* 基准出血位 padding-top 12px 不变,净间距 10px */
+    margin-top: -2px;
   }
 
   .category-button {
@@ -887,7 +891,8 @@ mark {
   }
 
   .category-list {
-    margin-top: 8px;
+    /* 基准出血位 padding-top 12px 不变,净间距 8px */
+    margin-top: -4px;
   }
 
   .empty-state {
