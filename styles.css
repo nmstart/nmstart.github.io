@@ -2,9 +2,9 @@
 
 :root {
   color-scheme: light;
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-raised: #ffffff; /* 预留:浮起表面色,当前未使用 */
+  --bg: #f0f3f7;
+  --surface: #f0f3f7; /* 拟态前提:表面与背景同色,阴影才能无缝融合 */
+  --surface-raised: #f0f3f7; /* 拟态下与背景同色 */
   --text: #182230;
   --text-secondary: #667085;
   --border: #e4e7ec;
@@ -12,15 +12,22 @@
   --accent-hover: #4952e4;
   --accent-soft: #eef0fe; /* 预留:软强调背景,当前未使用 */
   --brand-gradient: linear-gradient(135deg, #4e7cf6, #8b5cf6);
-  --control: rgba(246, 247, 249, 0.86);
+  --control: rgba(240, 243, 247, 0.86);
   --shadow: 0 12px 32px rgba(16, 24, 40, 0.07);
+  /* 轻拟态双阴影:浅色光从左上来,深色影向右下去 */
+  --neu-light: rgba(255, 255, 255, 0.9);
+  --neu-dark: rgba(163, 177, 198, 0.5);
+  --neu-raised: 5px 5px 12px var(--neu-dark), -5px -5px 12px var(--neu-light);
+  --neu-raised-lg: 8px 8px 18px var(--neu-dark), -8px -8px 18px var(--neu-light);
+  --neu-raised-sm: 3px 3px 7px var(--neu-dark), -3px -3px 7px var(--neu-light);
+  --neu-inset: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #101318;
-  --surface: #181d24;
-  --surface-raised: #20262f; /* 预留:浮起表面色,当前未使用 */
+  --bg: #1d222b;
+  --surface: #1d222b; /* 拟态前提:表面与背景同色,阴影才能无缝融合 */
+  --surface-raised: #1d222b; /* 拟态下与背景同色 */
   --text: #edf1f7;
   --text-secondary: #9aa6b5;
   --border: #2b333e;
@@ -28,8 +35,15 @@
   --accent-hover: #a6acfa;
   --accent-soft: #262a4d; /* 预留:软强调背景,当前未使用 */
   --brand-gradient: linear-gradient(135deg, #5d86f7, #9a70f7);
-  --control: rgba(16, 19, 24, 0.86);
+  --control: rgba(29, 34, 43, 0.86);
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  /* 轻拟态双阴影:微弱高光 + 深色投影,在暗色上拉开凹凸 */
+  --neu-light: rgba(255, 255, 255, 0.05);
+  --neu-dark: rgba(0, 0, 0, 0.55);
+  --neu-raised: 5px 5px 12px var(--neu-dark), -5px -5px 12px var(--neu-light);
+  --neu-raised-lg: 8px 8px 18px var(--neu-dark), -8px -8px 18px var(--neu-light);
+  --neu-raised-sm: 3px 3px 7px var(--neu-dark), -3px -3px 7px var(--neu-light);
+  --neu-inset: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
 }
 
 * {
