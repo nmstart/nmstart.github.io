@@ -7,6 +7,11 @@
   const SEARCH_RENDER_DELAY_MS = 180;
   const STAGGER_STEP_MS = 35;
   const STAGGER_MAX_INDEX = 11;
+  const TOAST_DURATION_MS = 1600;
+  const LONG_PRESS_MS = 300;
+  const DRAG_THRESHOLD_MOUSE_PX = 6;
+  const DRAG_THRESHOLD_TOUCH_PX = 10;
+  const SCROLL_TOP_RATIO = 0.6;
 
   // 注册一次空 touchstart:iOS Safari 只有存在 touch 监听器时才启用 :active 按压态,
   // 借此让拟态的按压凹陷反馈在触屏上可靠生效(passive,不阻塞滚动)。
@@ -120,8 +125,8 @@
       delete toast.dataset.visible;
       setTimeout(() => {
         toast.hidden = true;
-      }, 200);
-    }, 1600);
+      }, 200); // 与 .toast 的隐藏过渡时长一致
+    }, TOAST_DURATION_MS);
   }
 
   /* ---------- 本地存储(隐私模式降级 + 会话内缓存) ---------- */
@@ -328,7 +333,7 @@
           delete button.dataset.copied;
           button.setAttribute('aria-label', '复制网址');
           button.title = '复制网址';
-        }, 1600);
+        }, TOAST_DURATION_MS);
       } catch (_) {
         button.title = '复制失败，请手动复制';
         showToast('复制失败，请手动复制');
@@ -424,6 +429,10 @@
     // 搜索子集与「最近访问」的顺序语义特殊,不允许拖拽;单卡片无可排。
     grid.classList.toggle('is-orderable', state.category !== 'recent' && !query && filtered.length > 1);
   }
+
+  // 拖拽排序是否可用:由 renderSites 维护 is-orderable 类。
+  // 定义在键盘排序与拖拽两个使用方之前,消除对声明顺序的依赖。
+  const isDragEnabled = () => grid.classList.contains('is-orderable');
 
   /* ---------- URL 状态同步 ---------- */
 
@@ -569,21 +578,12 @@
     return Math.max(1, links.filter((link) => link.offsetTop === firstTop).length);
   }
 
+  // 聚焦搜索类快捷键:⌘K / Ctrl K 与 /
   document.addEventListener('keydown', (event) => {
     if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       searchInput.focus();
       searchInput.select();
-      return;
-    }
-
-    // Alt+↑/↓:对聚焦的卡片做前后微调(无鼠标场景的排序入口)
-    if (event.altKey && !event.metaKey && !event.ctrlKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
-      const card = event.target instanceof Element ? event.target.closest('.site-card') : null;
-      if (card && isDragEnabled()) {
-        event.preventDefault();
-        moveCardByKeyboard(card, event.key === 'ArrowUp' ? -1 : 1);
-      }
       return;
     }
 
@@ -596,13 +596,29 @@
       return;
     }
 
+    // 输入框内按 Esc 退出输入状态
     if (event.key === 'Escape' && isTypingTarget(target)) {
       target.blur();
-      return;
     }
+  });
 
+  // Alt+↑/↓:对聚焦的卡片做前后微调(无鼠标场景的排序入口)
+  document.addEventListener('keydown', (event) => {
+    if (!event.altKey || event.metaKey || event.ctrlKey) return;
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    const card = event.target instanceof Element ? event.target.closest('.site-card') : null;
+    if (card && isDragEnabled()) {
+      event.preventDefault();
+      moveCardByKeyboard(card, event.key === 'ArrowUp' ? -1 : 1);
+    }
+  });
+
+  // 方向键在卡片网格间移动焦点(按实测列数换行换列)
+  document.addEventListener('keydown', (event) => {
     const arrowKeys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'];
-    if (!arrowKeys.includes(event.key) || isTypingTarget(target)) return;
+    if (!arrowKeys.includes(event.key) || event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target;
+    if (isTypingTarget(target)) return;
 
     const links = Array.from(grid.querySelectorAll('.card-link'));
     if (!links.length) return;
@@ -648,8 +664,6 @@
     suppressClick: false,
   };
 
-  const isDragEnabled = () => grid.classList.contains('is-orderable');
-
   function cleanupDragListeners() {
     window.removeEventListener('pointermove', onDragPointerMove);
     window.removeEventListener('pointerup', onDragPointerUp);
@@ -692,7 +706,7 @@
     drag.suppressClick = false;
     // 鼠标按住后位移超阈值即拖;触屏先长按,期间滑动手势让路给滚动。
     if (event.pointerType === 'touch') {
-      drag.longPressTimer = setTimeout(() => activateDrag(event.clientX, event.clientY), 300);
+      drag.longPressTimer = setTimeout(() => activateDrag(event.clientX, event.clientY), LONG_PRESS_MS);
     }
     window.addEventListener('pointermove', onDragPointerMove);
     window.addEventListener('pointerup', onDragPointerUp);
@@ -739,10 +753,11 @@
     const dy = event.clientY - drag.startY;
     if (!drag.active) {
       if (event.pointerType === 'touch') {
-        if (Math.hypot(dx, dy) > 10) cancelPendingDrag();
+        // 触屏位移超过阈值视为滚动手势,取消待触发的长按拖拽
+        if (Math.hypot(dx, dy) > DRAG_THRESHOLD_TOUCH_PX) cancelPendingDrag();
         return;
       }
-      if (Math.hypot(dx, dy) > 6) activateDrag(event.clientX, event.clientY);
+      if (Math.hypot(dx, dy) > DRAG_THRESHOLD_MOUSE_PX) activateDrag(event.clientX, event.clientY);
       return;
     }
     drag.lastX = event.clientX;
@@ -846,6 +861,8 @@
     reorderGlobal(cards, from, to);
     renderSites();
     grid.querySelectorAll('.site-card')[to]?.querySelector('.card-link')?.focus();
+    // 排序结果对读屏用户零宣告,用全局 toast(aria-live)补充确认
+    showToast(`已移动到第 ${to + 1} 位`);
   }
 
   // 拖拽激活过的手势,释放时的一次 click 不应打开站点
@@ -880,7 +897,7 @@
 
   function syncScrollState() {
     // 阈值随视口高度走:固定值在小屏(横屏手机)要滚过一整屏才出现,大屏又永远够不到。
-    backToTop.classList.toggle('is-visible', window.scrollY > window.innerHeight * 0.6);
+    backToTop.classList.toggle('is-visible', window.scrollY > window.innerHeight * SCROLL_TOP_RATIO);
     // sticky 元素的 offsetTop 会随吸顶位置移动，不能作阈值；用 main 的文档位置（搜索条的自然位置）。
     controls.classList.toggle('is-stuck', window.scrollY >= mainEl.offsetTop);
   }
