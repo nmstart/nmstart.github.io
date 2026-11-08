@@ -12,19 +12,14 @@
     <meta property="og:image" content="https://nmstart.github.io/assets/icons/favicon.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="theme-color" content="#f0f3f7" />
+    <!-- 内容安全策略:全部资源本地加载;脚本不放开 unsafe-inline(主题预载已外置),
+         style 需允许 noscript 内联样式;img 允许 https 因缺省站点会自动拉取对方 favicon -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'" />
     <title>起点导航 · 个人常用网站集合</title>
     <link rel="icon" type="image/png" href="./assets/icons/favicon.png" />
     <link rel="apple-touch-icon" href="./assets/icons/favicon.png" />
+    <script src="./theme.js"></script>
     <link rel="stylesheet" href="./styles.css" />
-    <script>
-      (() => {
-        try {
-          const saved = localStorage.getItem('nav-theme');
-          const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        } catch (_) {}
-      })();
-    </script>
     <script src="./sites.js" defer></script>
     <script src="./app.js" defer></script>
   </head>

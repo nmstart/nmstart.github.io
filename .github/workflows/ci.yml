@@ -15,12 +15,13 @@ jobs:
 
       - name: JS 语法检查
         run: |
+          node --check theme.js
           node --check app.js
           node --check sites.js
 
       - name: 静态资源引用完整性
         run: |
-          for f in styles.css sites.js app.js; do
+          for f in theme.js styles.css sites.js app.js; do
             grep -qF "./$f" index.html || { echo "index.html 缺少 ./$f 引用"; exit 1; }
           done
           node -e '
