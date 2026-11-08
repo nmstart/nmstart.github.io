@@ -507,30 +507,60 @@
     themeColor.content = isDark ? '#1d222b' : '#f0f3f7';
   }
 
-  function applyTheme(theme) {
+  function applyTheme(theme, { persist = true } = {}) {
     document.documentElement.dataset.theme = theme;
-    try {
-      localStorage.setItem('nav-theme', theme);
-    } catch (_) {
-      // 隐私模式下存储不可用时，仍可在当前页面切换主题。
+    if (persist) {
+      try {
+        localStorage.setItem('nav-theme', theme);
+      } catch (_) {
+        // 隐私模式下存储不可用时，仍可在当前页面切换主题。
+      }
     }
     updateTheme();
   }
 
-  themeToggle.addEventListener('click', () => {
-    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  // 带视图过渡的主题切换;persist=false 用于跟随系统/跨标签同步,不覆盖用户的选择
+  function setTheme(theme, { persist = true } = {}) {
     if (typeof document.startViewTransition === 'function') {
       const viewTransition = document.startViewTransition(() => {
         // 快照拍摄期间禁用元素级过渡，避免新快照拍到「半新半旧」的混杂画面。
         document.documentElement.dataset.themeSwitching = 'true';
-        applyTheme(nextTheme);
+        applyTheme(theme, { persist });
       });
       // 动画完成或被后续切换打断（skip）时都会 settle，属性清理天然可靠。
       viewTransition.finished.finally(() => {
         delete document.documentElement.dataset.themeSwitching;
       });
     } else {
-      applyTheme(nextTheme);
+      applyTheme(theme, { persist });
+    }
+  }
+
+  themeToggle.addEventListener('click', () => {
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+
+  // 用户未手动选过主题时,系统昼夜切换实时跟随;一旦手动切换即以用户选择为准
+  const systemDark = matchMedia('(prefers-color-scheme: dark)');
+  systemDark.addEventListener('change', (event) => {
+    try {
+      if (localStorage.getItem('nav-theme')) return;
+    } catch (_) {
+      return; // 存储不可用时无法区分是否手动设置过,维持现状
+    }
+    setTheme(event.matches ? 'dark' : 'light', { persist: false });
+  });
+
+  /* ---------- 多标签页同步 ---------- */
+
+  // 另一个标签页改动了本地数据(storage 事件只在本页之外触发):
+  // 失效会话缓存并按最新数据刷新视图;主题跟随对方的选择且不回写,避免两个标签页互相覆盖。
+  window.addEventListener('storage', (event) => {
+    if (event.key === RECENT_KEY || event.key === ORDER_KEY) {
+      storageCache.delete(event.key);
+      dispatchState({ history: 'none' });
+    } else if (event.key === 'nav-theme' && (event.newValue === 'dark' || event.newValue === 'light')) {
+      applyTheme(event.newValue, { persist: false });
     }
   });
 
@@ -553,7 +583,9 @@
     state.query = event.target.value;
     syncSearchClear();
     clearTimeout(searchRenderTimer);
-    // 连续击键只更新状态,停顿后经 dispatchState 渲染并落成一条历史记录;清空关键词立即生效
+    // 输入法组词过程中不渲染,词组确认后的最终 input 事件(isComposing=false)才过滤,
+    // 避免拼音每敲一个字母就全量重建一次网格
+    if (event.isComposing) return;
     if (state.query.trim()) {
       searchRenderTimer = setTimeout(() => dispatchState(), SEARCH_RENDER_DELAY_MS);
     } else {
@@ -562,6 +594,7 @@
   });
 
   searchInput.addEventListener('keydown', (event) => {
+    if (event.isComposing) return; // Esc 优先让输入法取消组词
     if (event.key === 'Escape' && searchInput.value) {
       event.stopPropagation();
       clearTimeout(searchRenderTimer);
