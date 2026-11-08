@@ -169,12 +169,13 @@ svg {
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 50%;
   background: var(--surface);
+  box-shadow: var(--neu-raised-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+  transition: box-shadow 160ms ease, color 160ms ease;
 }
 
 .theme-toggle svg {
@@ -257,10 +258,11 @@ svg {
   width: 100%;
   height: 52px;
   padding: 0 52px 0 48px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
   border-radius: 14px;
   outline: none;
   background: var(--surface);
+  box-shadow: var(--neu-inset);
   color: var(--text);
   font-size: 16px;
   transition: border-color 160ms ease, box-shadow 200ms ease;
@@ -271,8 +273,8 @@ svg {
 }
 
 .search-box input:focus {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: var(--neu-inset), 0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent);
 }
 
 .search-shortcut {
@@ -283,9 +285,10 @@ svg {
   padding: 0 7px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 7px;
   background: var(--bg);
+  box-shadow: var(--neu-raised-sm);
   color: var(--text-secondary);
   font-family: inherit;
   font-size: 12px;
@@ -316,6 +319,8 @@ svg {
 }
 
 .tab-indicator {
+  /* 拟态下激活分类改为凸起药丸,禁用滑动下划线(JS 定位隐藏元素无副作用) */
+  display: none;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -338,7 +343,7 @@ svg {
   color: var(--text-secondary);
   font-size: 14px;
   cursor: pointer;
-  transition: color 160ms ease;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
 /* 热区竖向垫到 44px;横向不外扩,避免与相邻分类重叠 */
@@ -351,7 +356,10 @@ svg {
   right: 0;
 }
 
+/* 激活分类凸起成药丸,替代原渐变下划线 */
 .category-button[aria-pressed="true"] {
+  background: var(--surface);
+  box-shadow: var(--neu-raised-sm);
   color: var(--accent);
   font-weight: 600;
 }
@@ -395,10 +403,10 @@ svg {
 .site-card {
   position: relative;
   min-width: 0;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
   border-radius: 14px;
   background: var(--surface);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.02);
+  box-shadow: var(--neu-raised);
   cursor: pointer;
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
@@ -423,9 +431,10 @@ svg {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--surface);
+  box-shadow: var(--neu-inset);
 }
 
 .site-favicon {
@@ -478,12 +487,13 @@ svg {
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 8px;
   background: var(--surface);
+  box-shadow: var(--neu-raised-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+  transition: opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease, background 180ms ease, color 180ms ease;
 }
 
 /* 视觉 28px,热区外扩到 44px,方便手指点按 */
@@ -512,8 +522,9 @@ svg {
 
 .empty-state {
   padding: 80px 24px;
-  border: 1px dashed var(--border);
+  border: 0;
   border-radius: 14px;
+  box-shadow: var(--neu-inset);
   text-align: center;
 }
 
@@ -554,6 +565,8 @@ svg {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  /* 强调色实心按钮只保留右下投影,左上高光对深色填充无意义 */
+  box-shadow: 4px 4px 10px var(--neu-dark);
 }
 
 :root[data-theme="dark"] .primary-button {
@@ -718,9 +731,10 @@ mark {
   animation: card-in 260ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay, 0ms) backwards;
 }
 
-/* 按压反馈 */
+/* 按压反馈:拟态下按下去即凹陷 */
 .site-card:active {
   transform: scale(0.985);
+  box-shadow: var(--neu-inset);
 }
 
 /* 全局轻提示 */
@@ -758,16 +772,16 @@ mark {
   height: 44px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 50%;
   background: var(--surface);
   color: var(--text-secondary);
-  box-shadow: var(--shadow);
+  box-shadow: var(--neu-raised);
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
   transform: translateY(8px);
-  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms, border-color 160ms ease, color 160ms ease;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms, box-shadow 160ms ease, color 160ms ease;
 }
 
 .back-to-top.is-visible {
@@ -894,7 +908,7 @@ mark {
   }
 
   .copy-button:hover {
-    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    box-shadow: var(--neu-raised);
     background: var(--bg);
     color: var(--text);
   }
@@ -902,7 +916,7 @@ mark {
   .site-card:hover {
     transform: translateY(-2px);
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-    box-shadow: var(--shadow);
+    box-shadow: var(--neu-raised-lg);
   }
 
   .brand:hover .brand-mark {
@@ -911,7 +925,6 @@ mark {
   }
 
   .theme-toggle:hover {
-    border-color: var(--text-secondary);
     color: var(--text);
   }
 
@@ -933,14 +946,13 @@ mark {
   }
 
   .back-to-top:hover {
-    border-color: var(--text-secondary);
     color: var(--text);
   }
 }
 
 /* 复制成功的状态指示优先于悬停样式 */
 .copy-button[data-copied="true"] {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  box-shadow: var(--neu-raised-sm), 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
   color: var(--accent);
 }
 
