@@ -38,8 +38,13 @@ jobs:
           node -e '
             global.window = {};
             require("./sites.js");
+            const categories = global.window.NAV_CATEGORIES;
             const sites = global.window.NAV_SITES;
-            const valid = new Set(["dev", "docs", "ai", "design", "learn", "productivity", "discover", "fun"]);
+            if (!Array.isArray(categories) || !categories.length) { console.error("sites.js 未定义 NAV_CATEGORIES"); process.exit(1); }
+            if (!Array.isArray(sites) || !sites.length) { console.error("sites.js 未定义 NAV_SITES"); process.exit(1); }
+            // 分类白名单以数据文件的 NAV_CATEGORIES 为单一事实来源,不再与 app.js 双份维护
+            const valid = new Set(categories.map((c) => c.id));
+            if (valid.size !== categories.length) { console.error("分类 id 存在重复"); process.exit(1); }
             const urls = new Set();
             let fail = 0;
             for (const s of sites) {
@@ -51,7 +56,7 @@ jobs:
               urls.add(s.url);
             }
             if (fail) process.exit(1);
-            console.log("站点数据通过:", sites.length, "条");
+            console.log("站点数据通过:", sites.length, "条,", valid.size, "个分类");
           '
 
       - name: 空白字符检查

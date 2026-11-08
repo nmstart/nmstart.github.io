@@ -1,5 +1,18 @@
-// 手动维护此列表即可。category 可选：dev、docs、ai、design、learn、productivity、discover、fun。
-// icon 指向本地持久化图标；新增网站时可省略，加载时会自动尝试在线获取并降级为首字符。
+// 本文件是站点与分类的单一事实来源,CI 会校验两者的一致性。
+// 新增分类:在 NAV_CATEGORIES 添加 { id, name } 即可,站点记录的 category 引用这里的 id。
+// 新增站点:向 NAV_SITES 添加一条记录;icon 指向本地持久化图标(以域名命名,
+// 建议压缩到 10KB 以内),可省略,加载时会自动尝试在线获取并降级为首字符。
+window.NAV_CATEGORIES = [
+  { id: 'dev', name: '开发工具' },
+  { id: 'docs', name: '开发文档' },
+  { id: 'ai', name: '人工智能' },
+  { id: 'design', name: '设计资源' },
+  { id: 'learn', name: '学习成长' },
+  { id: 'productivity', name: '效率工具' },
+  { id: 'discover', name: '发现资讯' },
+  { id: 'fun', name: '娱乐' },
+];
+
 window.NAV_SITES = [
   // 开发工具
   { name: 'GitHub', url: 'https://github.com/', category: 'dev', description: '代码托管、协作开发与开源项目社区。', tags: ['代码', '开源', 'Git'], icon: './assets/icons/github.svg' },

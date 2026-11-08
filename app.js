@@ -23,18 +23,14 @@
   } catch (_) {
     sites = Array.isArray(window.NAV_SITES) ? window.NAV_SITES : [];
   }
-  const categories = [
+  // 业务分类以 sites.js 的 NAV_CATEGORIES 为单一事实来源(CI 校验数据引用的分类必须已定义);
+  // all / recent 是 UI 层的虚拟分类,不进入数据文件。
+  const virtualCategories = [
     { id: 'all', name: '全部' },
     { id: 'recent', name: '最近访问' },
-    { id: 'dev', name: '开发工具' },
-    { id: 'docs', name: '开发文档' },
-    { id: 'ai', name: '人工智能' },
-    { id: 'design', name: '设计资源' },
-    { id: 'learn', name: '学习成长' },
-    { id: 'productivity', name: '效率工具' },
-    { id: 'discover', name: '发现资讯' },
-    { id: 'fun', name: '娱乐' },
   ];
+  const dataCategories = Array.isArray(window.NAV_CATEGORIES) ? window.NAV_CATEGORIES : [];
+  const categories = [...virtualCategories, ...dataCategories];
 
   const state = { query: '', category: 'all' };
   const grid = document.querySelector('#site-grid');
