@@ -438,15 +438,21 @@
 
   /* ---------- URL 状态同步 ---------- */
 
-  function syncUrl() {
+  // mode: 'push' 视图切换产生历史记录(后退可回退到上一个视图);
+  // 'replace' 原地改写当前记录;'none' 状态来自历史(popstate),不回写。
+  function syncUrl(mode = 'replace') {
     const params = new URLSearchParams();
     if (state.query.trim()) params.set('q', state.query.trim());
     if (state.category !== 'all') params.set('cat', state.category);
     const search = params.toString();
+    const url = search ? `${location.pathname}?${search}${location.hash}` : `${location.pathname}${location.hash}`;
+    // 状态未变不写历史,避免 resetOrder 这类无 URL 语义的操作塞入重复记录
+    if (url === `${location.pathname}${location.search}${location.hash}`) return;
     try {
-      history.replaceState(null, '', search ? `${location.pathname}?${search}${location.hash}` : `${location.pathname}${location.hash}`);
+      if (mode === 'push') history.pushState(null, '', url);
+      else if (mode === 'replace') history.replaceState(null, '', url);
     } catch (_) {
-      // file:// 等场景下 replaceState 不可用，静默降级为仅内存状态。
+      // file:// 等场景下 history API 不可用，静默降级为仅内存状态。
     }
   }
 
@@ -464,7 +470,8 @@
   // 再按固定顺序同步输入框、分类按钮、URL 与视图。
   // 调用方只改 state,不再手工编排 syncSearchClear / updateCategoryButtons / syncUrl / renderSites 的调用序列。
   // 输入框仅在值不一致时回写,不打断输入法组词过程。
-  function dispatchState({ animate = false, focusSearch = false } = {}) {
+  // history: 'push'(默认,切换视图可后退) | 'replace' | 'none'(状态来自 popstate)
+  function dispatchState({ animate = false, focusSearch = false, history: historyMode = 'push' } = {}) {
     if (state.category === 'recent' && readRecent().length === 0) {
       state.category = 'all';
     }
@@ -473,14 +480,15 @@
     if (searchInput.value !== state.query) searchInput.value = state.query;
     syncSearchClear();
     updateCategoryButtons();
-    syncUrl();
+    if (historyMode !== 'none') syncUrl(historyMode);
     renderSites({ animate });
     if (focusSearch) searchInput.focus();
   }
 
   window.addEventListener('popstate', () => {
+    clearTimeout(searchRenderTimer); // 丢弃排队的搜索渲染,以历史记录的状态为准
     readUrlState();
-    dispatchState();
+    dispatchState({ history: 'none' });
   });
 
   /* ---------- 重置筛选 ---------- */
@@ -544,12 +552,12 @@
   searchInput.addEventListener('input', (event) => {
     state.query = event.target.value;
     syncSearchClear();
-    syncUrl();
     clearTimeout(searchRenderTimer);
+    // 连续击键只更新状态,停顿后经 dispatchState 渲染并落成一条历史记录;清空关键词立即生效
     if (state.query.trim()) {
-      searchRenderTimer = setTimeout(() => renderSites(), SEARCH_RENDER_DELAY_MS);
+      searchRenderTimer = setTimeout(() => dispatchState(), SEARCH_RENDER_DELAY_MS);
     } else {
-      renderSites();
+      dispatchState();
     }
   });
 
