@@ -56,7 +56,8 @@
   sites = normalizeSites(sites);
   // 现存站点的 URL 集合:读排序数据时据此剔除已下架站点的残留,
   // 防止 ORDER_KEY 随站点增删无限膨胀(只增不减的排序列表会越攒越长)。
-  const siteUrls = new Set(sites.map((site) => site.url));
+  // let:站点数据热更新(SW 后台回源命中新版本)后需随 sites 一起重建。
+  let siteUrls = new Set(sites.map((site) => site.url));
   // 业务分类以 sites.js 的 NAV_CATEGORIES 为单一事实来源(CI 校验数据引用的分类必须已定义);
   // all / recent 是 UI 层的虚拟分类,不进入数据文件。
   // 组装时过滤缺 id/name 的坏项,数据文件被手改坏也不炸 UI。
@@ -992,11 +993,41 @@
   window.addEventListener('error', showErrorState);
   window.addEventListener('unhandledrejection', showErrorState);
 
+  /* ---------- 站点数据热更新 ---------- */
+
+  // SW 对 sites.js 走 stale-while-revalidate:后台回源发现内容变化时 postMessage 通知这里,
+  // 重新拉取并按哈希比对,确有新数据才重渲染——部署后的新站点在当前会话内即时出现,
+  // 又不会在内容未变时空转。
+  function hashSites(list) {
+    const json = JSON.stringify(list);
+    let hash = 0;
+    for (let i = 0; i < json.length; i += 1) {
+      hash = (hash * 31 + json.charCodeAt(i)) | 0;
+    }
+    return hash;
+  }
+
+  async function refreshSitesFromNetwork() {
+    try {
+      await import(`./sites.js?ts=${Date.now()}`);
+      const fresh = normalizeSites(window.NAV_SITES);
+      if (hashSites(fresh) === hashSites(sites)) return;
+      sites = fresh;
+      siteUrls = new Set(sites.map((site) => site.url));
+      dispatchState();
+    } catch (_) {
+      // 热更新失败不打扰用户,下次加载自然拿到新数据
+    }
+  }
+
   /* ---------- PWA ---------- */
 
   // 注册 Service Worker(离线缓存/添加到主屏);失败场景(file://、受限环境)静默降级为在线使用
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'NAV_SITES_UPDATED') refreshSitesFromNetwork();
+    });
   }
 
   /* ---------- 启动 ---------- */
