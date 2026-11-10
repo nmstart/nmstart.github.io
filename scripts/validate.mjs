@@ -23,6 +23,18 @@ for (const iconPath of manifestIcons) {
 if (!fs.existsSync('sw.js')) fail('缺少 sw.js');
 console.log(`manifest 校验通过: ${manifestIcons.length} 个图标`);
 
+/* ---------- og:image 资源 ---------- */
+
+const html = fs.readFileSync('index.html', 'utf8');
+const ogMatch = html.match(/<meta property="og:image" content="([^"]+)"/);
+if (!ogMatch) {
+  fail('index.html 缺少 og:image');
+} else {
+  const ogPath = ogMatch[1].replace(/^https:\/\/nmstart\.github\.io\//, '');
+  if (!fs.existsSync(ogPath)) fail(`og:image 资源缺失: ${ogPath}`);
+  else console.log(`og:image 校验通过: ${ogPath}`);
+}
+
 /* ---------- sites.js 图标引用完整性 ---------- */
 
 const src = fs.readFileSync('sites.js', 'utf8');
