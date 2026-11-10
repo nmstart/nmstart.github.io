@@ -19,9 +19,13 @@ jobs:
       - name: JS 语法检查
         run: |
           node --check theme.js
+          node --check core.js
           node --check app.js
           node --check sites.js
           node --check sw.js
+
+      - name: 单元测试
+        run: node --test tests/*.test.mjs
 
       # 与本地 pre-commit 钩子(./scripts/validate.mjs)共用同一份校验逻辑
       - name: 数据卫生与静态资源引用完整性
@@ -29,7 +33,7 @@ jobs:
 
       - name: index.html 引用完整性
         run: |
-          for f in theme.js styles.css sites.js app.js; do
+          for f in theme.js styles.css core.js sites.js app.js; do
             grep -qF "./$f" index.html || { echo "index.html 缺少 ./$f 引用"; exit 1; }
           done
 

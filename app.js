@@ -17,6 +17,9 @@
   // 借此让拟态的按压凹陷反馈在触屏上可靠生效(passive,不阻塞滚动)。
   document.addEventListener('touchstart', () => {}, { passive: true });
 
+  // 纯函数核心来自 core.js(浏览器挂 window.NAV_CORE,node:test 经 module.exports 复用,见 tests/)
+  const { escapeHtml, highlightText, normalizeSites, computeReorderedOrder } = window.NAV_CORE;
+
   // 站点数据每次强制回源拉取(时间戳查询参数绕过 HTTP 缓存),部署后新站点立即生效;
   // index.html 里 script 标签预载的 window.NAV_SITES 仅作拉取失败时的兜底。
   // 用动态 import 而非 fetch+eval:HTTP 错误页会因模块解析失败自然走兜底,
@@ -36,21 +39,6 @@
     sites = Array.isArray(window.NAV_SITES) ? window.NAV_SITES : [];
   } finally {
     clearTimeout(timeoutId);
-  }
-
-  // 数据容错:剔除无 URL 的记录,缺省字段补安全默认值,
-  // 保证单条坏数据只降级自己,不会中断整批渲染。
-  function normalizeSites(raw) {
-    if (!Array.isArray(raw)) return [];
-    return raw
-      .filter((site) => site && typeof site.url === 'string' && site.url)
-      .map((site) => ({
-        ...site,
-        name: typeof site.name === 'string' ? site.name : '',
-        description: typeof site.description === 'string' ? site.description : '',
-        tags: Array.isArray(site.tags) ? site.tags.filter((tag) => typeof tag === 'string') : [],
-        icon: typeof site.icon === 'string' ? site.icon : '',
-      }));
   }
 
   sites = normalizeSites(sites);
@@ -95,32 +83,6 @@
   document.querySelector('#current-year').textContent = new Date().getFullYear();
 
   /* ---------- 工具 ---------- */
-
-  const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (ch) => ESCAPE_MAP[ch]);
-  }
-
-  // 在原始文本上命中关键词,再对切分出的片段逐一转义拼接:
-  // 若先转义再匹配,搜索 amp/lt 等词会命中 &amp; 这类实体内部,把转义串拆花。
-  function highlightText(text, query) {
-    const raw = String(text);
-    const keyword = query.trim();
-    if (!keyword) return escapeHtml(raw);
-    const pattern = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(pattern, 'gi');
-    const parts = [];
-    let last = 0;
-    let match;
-    while ((match = regex.exec(raw))) {
-      parts.push(escapeHtml(raw.slice(last, match.index)), '<mark>', escapeHtml(match[0]), '</mark>');
-      last = match.index + match[0].length;
-      if (match[0].length === 0) regex.lastIndex += 1; // 防御空匹配导致的死循环
-    }
-    parts.push(escapeHtml(raw.slice(last)));
-    return parts.join('');
-  }
 
   function showToast(message) {
     clearTimeout(showToast.timer);
@@ -194,22 +156,20 @@
 
   const writeOrder = (list) => writeStoredList(ORDER_KEY, list);
 
-  // 把可见视图内 from→to 的移动映射回全局顺序:以目标位的可见项为锚点插入,
-  // 夹在两者之间、未在本视图显示的站点保持原有邻接关系。
+  // 把可见视图内 from→to 的移动映射回全局顺序:锚点映射的纯逻辑在 core.js
+  // 的 computeReorderedOrder(有单测覆盖),这里只负责取 DOM 上的 url 与持久化。
   function reorderGlobal(cards, from, to) {
     const moved = cards[from]?.dataset.url;
     const neighbor = cards[to]?.dataset.url;
     if (!moved || !neighbor || moved === neighbor) return;
-    const current = readOrder();
-    const known = new Set(current);
-    const fullOrder = [...current, ...sites.filter((site) => !known.has(site.url)).map((site) => site.url)];
-    const rest = fullOrder.filter((url) => url !== moved);
-    const at = rest.indexOf(neighbor);
-    if (at === -1) return;
-    const next = to < from
-      ? [...rest.slice(0, at), moved, ...rest.slice(at)]
-      : [...rest.slice(0, at + 1), moved, ...rest.slice(at + 1)];
-    writeOrder(next);
+    const next = computeReorderedOrder({
+      order: readOrder(),
+      siteUrls: sites.map((site) => site.url),
+      moved,
+      neighbor,
+      insertBefore: to < from,
+    });
+    if (next) writeOrder(next);
   }
 
   /* ---------- 分类 ---------- */

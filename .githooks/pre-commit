@@ -4,7 +4,9 @@ set -e
 
 node scripts/validate.mjs
 
-for f in theme.js app.js sites.js sw.js; do
+node --test tests/*.test.mjs
+
+for f in theme.js core.js app.js sites.js sw.js; do
   node --check "$f"
 done
 
