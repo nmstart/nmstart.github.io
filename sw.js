@@ -40,8 +40,11 @@ self.addEventListener('fetch', (event) => {
   if (path.startsWith('/assets/icons/')) {
     event.respondWith(
       caches.match(request).then((hit) => hit || fetch(request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        // 只缓存成功响应:错误页(404/500)不该顶替图标,否则离线时错误页被当成图标常驻
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
         return response;
       }))
     );
@@ -53,8 +56,11 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(path, copy));
+        // 错误响应(含中间代理的 502)不入缓存,离线回退才不会拿到错误页
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(path, copy));
+        }
         return response;
       })
       .catch(() => caches.match(path).then((hit) => hit || caches.match('./index.html')))

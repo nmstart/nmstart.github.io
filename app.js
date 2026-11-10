@@ -54,6 +54,9 @@
   }
 
   sites = normalizeSites(sites);
+  // 现存站点的 URL 集合:读排序数据时据此剔除已下架站点的残留,
+  // 防止 ORDER_KEY 随站点增删无限膨胀(只增不减的排序列表会越攒越长)。
+  const siteUrls = new Set(sites.map((site) => site.url));
   // 业务分类以 sites.js 的 NAV_CATEGORIES 为单一事实来源(CI 校验数据引用的分类必须已定义);
   // all / recent 是 UI 层的虚拟分类,不进入数据文件。
   // 组装时过滤缺 id/name 的坏项,数据文件被手改坏也不炸 UI。
@@ -186,7 +189,7 @@
 
   /* ---------- 站点排序(本地持久化) ---------- */
 
-  const readOrder = () => readStoredList(ORDER_KEY, (item) => typeof item === 'string');
+  const readOrder = () => readStoredList(ORDER_KEY, (item) => typeof item === 'string' && siteUrls.has(item));
 
   const writeOrder = (list) => writeStoredList(ORDER_KEY, list);
 
@@ -352,7 +355,7 @@
   // (本地 icon 由 CI 保证存在,不在此列)。
   const brokenAutoIcons = new Set();
 
-  function createSiteCard(site, query) {
+  function createSiteCard(site, query, recentSet) {
     const card = template.content.firstElementChild.cloneNode(true);
     const link = card.querySelector('.card-link');
     const avatar = card.querySelector('.site-avatar');
@@ -386,7 +389,7 @@
       avatar.dataset.fallback = 'true';
     }
 
-    if (recentUrlSet().has(site.url)) {
+    if (recentSet.has(site.url)) {
       avatar.dataset.recent = 'true';
     }
 
@@ -408,10 +411,12 @@
   function renderSites({ animate = false } = {}) {
     const filtered = getFilteredSites();
     const query = state.query.trim();
+    // 最近访问集合每轮渲染只解析一次,而不是每张卡片各建一个 Set
+    const recentSet = recentUrlSet();
     const fragment = document.createDocumentFragment();
 
     filtered.forEach((site, index) => {
-      const card = createSiteCard(site, query);
+      const card = createSiteCard(site, query, recentSet);
       if (animate && index <= STAGGER_MAX_INDEX) {
         card.style.setProperty('--delay', `${index * STAGGER_STEP_MS}ms`);
       }

@@ -1,0 +1,12 @@
+#!/bin/sh
+# 与 CI(.github/workflows/ci.yml)共用 scripts/validate.mjs,本地拦截坏数据,避免推到 CI 才失败。
+set -e
+
+node scripts/validate.mjs
+
+for f in theme.js app.js sites.js sw.js; do
+  node --check "$f"
+done
+
+# 检出空白错误(行尾空白 / 空行带缩进),与 CI 的 git diff --check 对齐
+git diff --cached --check
